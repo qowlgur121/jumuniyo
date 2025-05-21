@@ -5,8 +5,8 @@ spring:
   # --- 데이터베이스 설정 (MySQL) ---
   datasource:
     url: jdbc:mysql://localhost:3306/jumuniyo_db?useSSL=false&serverTimezone=Asia/Seoul&characterEncoding=UTF-8&allowPublicKeyRetrieval=true
-    username: root # <<=== 실제 본인의 MySQL 사용자명으로 변경하세요!
-    password: 1234 # <<=== 실제 본인의 MySQL 비밀번호로 변경하세요!
+    username: root # 로컬 MySQL 사용자명 (실제 사용하는 계정으로 변경)
+    password: 1234 # 로컬 MySQL 비밀번호 (실제 사용하는 비밀번호로 변경해야 함)
     driver-class-name: com.mysql.cj.jdbc.Driver
 
   # --- JPA/Hibernate 설정 ---

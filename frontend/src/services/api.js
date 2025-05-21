@@ -3,7 +3,7 @@ import axios from 'axios';
 // Vite 환경 변수에서 API 기본 URL 가져오는 부분임.
 // .env.development 또는 .env.production 파일에 정의된 VITE_APP_API_BASE_URL 값을 사용함.
 // VITE_APP_API_BASE_URL=http://localhost:8080 처럼 .env 파일에 써둔 값을 가져옴.
-const API_BASE_URL = import.meta.env.VITE_APP_API_BASE_URL || 'http://localhost:8081'; // .env 파일에 값이 없으면 기본값으로 'http://localhost:8081'을 사용함.
+const API_BASE_URL = import.meta.env.VITE_APP_API_BASE_URL || 'http://localhost:8080'; // .env 파일에 값이 없으면 기본값으로 'http://localhost:8081'을 사용함.
 
 // Axios 인스턴스 생성하는 부분임.
 // 이 인스턴스에 우리가 원하는 기본 설정들을 넣어둘 것임.
