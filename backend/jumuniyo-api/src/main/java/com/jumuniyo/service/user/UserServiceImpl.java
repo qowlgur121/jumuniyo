@@ -1,9 +1,13 @@
 package com.jumuniyo.service.user; // 본인의 패키지 경로에 맞게 수정
 
 import com.jumuniyo.domain.user.User;
+import com.jumuniyo.domain.user.UserRole;
+import com.jumuniyo.domain.user.UserStatus;
 import com.jumuniyo.dto.user.UserSignUpRequestDto;
 import com.jumuniyo.dto.user.UserLoginRequestDto;
 import com.jumuniyo.dto.user.UserLoginResponseDto;
+import com.jumuniyo.dto.auth.OwnerSignUpRequestDto;
+import com.jumuniyo.dto.auth.OwnerSignUpResponseDto;
 import com.jumuniyo.repository.user.UserRepository;
 import com.jumuniyo.security.JwtTokenProvider;
 import lombok.RequiredArgsConstructor;
@@ -46,6 +50,53 @@ public class UserServiceImpl implements UserService {
         // 현재 UserSignUpRequestDto.toEntity()에서 초기 상태를 PENDING_EMAIL_VERIFICATION으로 설정함
 
         // 회원가입 성공 후 추가 작업이 있다면 여기에 구현 (예: 알림, 로그 기록 등)
+    }
+
+    @Override
+    @Transactional // 데이터 변경이 있으므로 트랜잭션 적용
+    public OwnerSignUpResponseDto ownerSignUp(OwnerSignUpRequestDto requestDto) {
+        // 1. 이메일 중복 검사
+        if (userRepository.existsByEmail(requestDto.getEmail())) {
+            throw new IllegalArgumentException("이미 가입된 이메일입니다: " + requestDto.getEmail());
+        }
+
+        // 2. 닉네임 중복 검사
+        if (userRepository.existsByNickname(requestDto.getNickname())) {
+            throw new IllegalArgumentException("이미 사용 중인 닉네임입니다: " + requestDto.getNickname());
+        }
+
+        // 3. 비밀번호 암호화
+        String encodedPassword = passwordEncoder.encode(requestDto.getPassword());
+
+        // 4. 사장님 User 엔티티 생성
+        User owner = User.builder()
+                .email(requestDto.getEmail())
+                .password(encodedPassword)
+                .nickname(requestDto.getNickname())
+                .phoneNumber(requestDto.getPhoneNumber())
+                .role(UserRole.ROLE_OWNER) // 사장님 역할 설정
+                .status(UserStatus.PENDING_APPROVAL) // 승인 대기 상태
+                .profileImageUrl(null)
+                .provider(null) // 일반 가입 (OAuth2 아님)
+                .providerId(null)
+                .build();
+
+        // 5. 사장님 계정 저장
+        User savedOwner = userRepository.save(owner);
+
+        // 6. 응답 DTO 생성 및 반환
+        return OwnerSignUpResponseDto.of(
+                savedOwner.getId(),
+                savedOwner.getEmail(),
+                savedOwner.getNickname(),
+                savedOwner.getPhoneNumber(),
+                savedOwner.getRole(),
+                savedOwner.getStatus(),
+                savedOwner.getCreatedAt()
+        );
+
+        // TODO: 사장님 승인 알림 메일 발송 로직 추가 예정
+        // TODO: 관리자에게 새로운 사장님 가입 알림 전송 로직 추가 예정
     }
 
     @Override

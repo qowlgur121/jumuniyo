@@ -3,6 +3,8 @@ package com.jumuniyo.service.user; // 본인의 패키지 경로에 맞게 수�
 import com.jumuniyo.dto.user.UserSignUpRequestDto;
 import com.jumuniyo.dto.user.UserLoginRequestDto;
 import com.jumuniyo.dto.user.UserLoginResponseDto;
+import com.jumuniyo.dto.auth.OwnerSignUpRequestDto;
+import com.jumuniyo.dto.auth.OwnerSignUpResponseDto;
 // import com.jumuniyo.domain.user.User; // 필요하다면 User 엔티티 직접 반환
 
 public interface UserService {
@@ -14,6 +16,14 @@ public interface UserService {
      * @throws IllegalArgumentException 이메일 또는 닉네임 중복 시
      */
     void signUp(UserSignUpRequestDto requestDto); // 여기서는 void로 처리하고 Controller에서 성공 응답
+
+    /**
+     * 사장님 회원가입 처리
+     * @param requestDto 사장님 회원가입 요청 정보 DTO
+     * @return 생성된 사장님 계정 정보
+     * @throws IllegalArgumentException 이메일 중복, 사업자등록번호 중복 등
+     */
+    OwnerSignUpResponseDto ownerSignUp(OwnerSignUpRequestDto requestDto);
 
     /**
      * 사용자 로그인 처리
