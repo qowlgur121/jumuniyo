@@ -113,6 +113,23 @@
               Apple로 로그인
             </ion-button>
           </div>
+
+          <!-- 사장님 로그인 섹션 -->
+          <div class="owner-login-section spacing-lg">
+            <div class="owner-divider spacing-md">
+              <span class="divider-text responsive-small">사장님이신가요?</span>
+            </div>
+            
+            <ion-button 
+              expand="block" 
+              fill="solid" 
+              class="owner-login-button responsive-button"
+              @click="goToOwnerLogin"
+            >
+              <ion-icon :icon="businessOutline" slot="start"></ion-icon>
+              사장님 로그인
+            </ion-button>
+          </div>
         </div>
       </div>
     </ion-content>
@@ -127,7 +144,8 @@ import {
   chevronBackOutline, 
   chatbubbleOutline, 
   logoApple, 
-  mailOutline 
+  mailOutline,
+  businessOutline
 } from 'ionicons/icons';
 import {
   IonPage,
@@ -252,6 +270,10 @@ const goToFindEmail = () => {
 
 const goToFindPassword = () => {
   router.push('/auth/find-password');
+};
+
+const goToOwnerLogin = () => {
+  router.push('/owner/login');
 };
 </script>
 
@@ -453,6 +475,40 @@ const goToFindPassword = () => {
   --background: black;
   --color: white;
   --border-color: black;
+}
+
+/* 사장님 로그인 섹션 */
+.owner-login-section {
+  margin-top: 20px;
+}
+
+.owner-divider {
+  text-align: center;
+  position: relative;
+  margin: 20px 0;
+}
+
+.owner-divider::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background-color: var(--border-gray);
+}
+
+.owner-login-button {
+  --background: var(--yogiyo-primary, #ff1744);
+  --color: white;
+  --border-color: var(--yogiyo-primary, #ff1744);
+  font-weight: 600;
+  --border-radius: 8px;
+}
+
+.owner-login-button:hover {
+  --background: var(--yogiyo-primary-dark, #d50000);
+  --border-color: var(--yogiyo-primary-dark, #d50000);
 }
 
 /* ===========================================

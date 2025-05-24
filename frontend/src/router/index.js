@@ -40,6 +40,7 @@ const routes = [
       },
     ],
   },
+  // 일반 회원 인증
   {
     path: '/auth/signup',
     name: 'SignUp',
@@ -65,6 +66,49 @@ const routes = [
     name: 'ResetPassword',
     component: () => import('@/views/auth/ResetPasswordPage.vue'),
   },
+  // 사장님 인증
+  {
+    path: '/owner/signup',
+    name: 'OwnerSignUp',
+    component: () => import('@/views/auth/OwnerSignUpPage.vue'),
+  },
+  {
+    path: '/owner/login',
+    name: 'OwnerLogin',
+    component: () => import('@/views/auth/OwnerLoginPage.vue'),
+  },
+  // 사장님 전용 페이지들
+  {
+    path: '/owner/dashboard',
+    name: 'OwnerDashboard',
+    component: () => import('@/views/owner/OwnerDashboardPage.vue'),
+    meta: { requiresAuth: true, requiresOwner: true }
+  },
+  {
+    path: '/owner/stores',
+    name: 'OwnerStores',
+    component: () => import('@/views/owner/OwnerStoresPage.vue'),
+    meta: { requiresAuth: true, requiresOwner: true }
+  },
+  {
+    path: '/owner/orders',
+    name: 'OwnerOrders',
+    component: () => import('@/views/owner/OwnerOrdersPage.vue'),
+    meta: { requiresAuth: true, requiresOwner: true }
+  },
+  {
+    path: '/owner/analytics',
+    name: 'OwnerAnalytics',
+    component: () => import('@/views/owner/OwnerAnalyticsPage.vue'),
+    meta: { requiresAuth: true, requiresOwner: true }
+  },
+  {
+    path: '/owner/profile',
+    name: 'OwnerProfile',
+    component: () => import('@/views/owner/OwnerProfilePage.vue'),
+    meta: { requiresAuth: true, requiresOwner: true }
+  },
+  // 일반 고객 음식점 관련 (기존)
   {
     path: '/store/register',
     name: 'StoreRegister',
@@ -84,17 +128,42 @@ const router = createRouter({
   routes,
 });
 
-// 인증이 필요한 라우트 가드 (추후 구현)
+// 역할 기반 인증 가드
 router.beforeEach((to, from, next) => {
   const requiresAuth = to.matched.some(record => record.meta.requiresAuth);
-  const isAuthenticated = localStorage.getItem('token'); // 간단한 토큰 체크
-
-  if (requiresAuth && !isAuthenticated) {
+  const requiresOwner = to.matched.some(record => record.meta.requiresOwner);
+  const token = localStorage.getItem('token');
+  const userStr = localStorage.getItem('user');
+  
+  if (requiresAuth && !token) {
     // 인증이 필요한 페이지인데 로그인하지 않은 경우
     next('/auth/login');
-  } else {
-    next();
+    return;
   }
+
+  if (requiresOwner && token) {
+    // 사장님 전용 페이지인 경우 역할 확인
+    try {
+      const user = JSON.parse(userStr || '{}');
+      if (user.role !== 'ROLE_OWNER') {
+        // 사장님이 아닌 경우 사장님 로그인 페이지로 리다이렉트
+        next('/owner/login');
+        return;
+      }
+      
+      if (user.status === 'PENDING_APPROVAL') {
+        // 승인 대기 중인 사장님은 접근 제한
+        next('/owner/login');
+        return;
+      }
+    } catch (error) {
+      console.error('사용자 정보 파싱 오류:', error);
+      next('/owner/login');
+      return;
+    }
+  }
+
+  next();
 });
 
 export default router;

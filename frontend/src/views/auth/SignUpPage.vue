@@ -124,7 +124,7 @@
         <!-- 소셜 로그인 섹션 -->
         <div class="social-login-section spacing-lg">
           <div class="social-divider spacing-md">
-            <span class="divider-text responsive-small">또는</span>
+            <span class="divider-text responsive-small"></span>
           </div>
 
           <div class="social-buttons">
