@@ -1,5 +1,3 @@
-/// <reference types="vitest" />
-
 import legacy from '@vitejs/plugin-legacy'
 import vue from '@vitejs/plugin-vue'
 import path from 'path'
@@ -20,4 +18,4 @@ export default defineConfig({
     globals: true,
     environment: 'jsdom'
   }
-})
+}) 
