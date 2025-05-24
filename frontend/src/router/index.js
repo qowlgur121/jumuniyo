@@ -34,6 +34,10 @@ const routes = [
         path: 'tab4',
         component: () => import('@/views/Tab4Page.vue'),
       },
+      {
+        path: 'tab5',
+        component: () => import('@/views/Tab5Page.vue'),
+      },
     ],
   },
   {
@@ -61,11 +65,36 @@ const routes = [
     name: 'ResetPassword',
     component: () => import('@/views/auth/ResetPasswordPage.vue'),
   },
+  {
+    path: '/store/register',
+    name: 'StoreRegister',
+    component: () => import('@/views/store/StoreRegistrationPage.vue'),
+    meta: { requiresAuth: true } // 인증 필요
+  },
+  {
+    path: '/store/my',
+    name: 'MyStores',
+    component: () => import('@/views/store/MyStoresPage.vue'),
+    meta: { requiresAuth: true } // 인증 필요
+  },
 ];
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes,
+});
+
+// 인증이 필요한 라우트 가드 (추후 구현)
+router.beforeEach((to, from, next) => {
+  const requiresAuth = to.matched.some(record => record.meta.requiresAuth);
+  const isAuthenticated = localStorage.getItem('token'); // 간단한 토큰 체크
+
+  if (requiresAuth && !isAuthenticated) {
+    // 인증이 필요한 페이지인데 로그인하지 않은 경우
+    next('/auth/login');
+  } else {
+    next();
+  }
 });
 
 export default router;

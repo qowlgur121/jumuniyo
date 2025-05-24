@@ -79,6 +79,23 @@
             </div>
           </div>
 
+          <!-- 사장님 서비스 섹션 -->
+          <div class="business-section spacing-lg">
+            <h4 class="section-title responsive-body">사장님 서비스</h4>
+            <div class="business-list">
+              <div class="setting-item" @click="goToMyStores">
+                <ion-icon :icon="storefrontOutline" class="setting-icon business-icon"></ion-icon>
+                <span class="setting-label responsive-body">내 음식점 관리</span>
+                <ion-icon :icon="chevronForward" class="setting-arrow"></ion-icon>
+              </div>
+              <div class="setting-item" @click="goToRegisterStore">
+                <ion-icon :icon="addCircleOutline" class="setting-icon business-icon"></ion-icon>
+                <span class="setting-label responsive-body">새 음식점 등록</span>
+                <ion-icon :icon="chevronForward" class="setting-arrow"></ion-icon>
+              </div>
+            </div>
+          </div>
+
           <!-- 설정 메뉴 -->
           <div class="settings-section spacing-lg">
             <h4 class="section-title responsive-body">설정</h4>
@@ -148,7 +165,9 @@ import {
   locationOutline,
   cardOutline,
   helpCircleOutline,
-  chevronForward
+  chevronForward,
+  storefrontOutline,
+  addCircleOutline
 } from 'ionicons/icons';
 
 const router = useRouter();
@@ -244,6 +263,14 @@ const showHelp = async () => {
     position: 'top',
   });
   await toast.present();
+};
+
+const goToMyStores = () => {
+  router.push('/tabs/tab4');
+};
+
+const goToRegisterStore = () => {
+  router.push('/tabs/tab5');
 };
 
 const logout = async () => {
@@ -419,6 +446,54 @@ const logout = async () => {
 .menu-label {
   color: var(--text-primary);
   font-weight: 500;
+}
+
+/* 사장님 서비스 섹션 */
+.business-section {
+  padding: 0 8px;
+}
+
+.business-list {
+  background-color: var(--background-light);
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.business-icon {
+  color: var(--primary-red) !important;
+}
+
+.setting-item {
+  display: flex;
+  align-items: center;
+  padding: 20px 24px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  border-bottom: 1px solid var(--border-gray);
+}
+
+.setting-item:last-child {
+  border-bottom: none;
+}
+
+.setting-item:hover {
+  background-color: var(--border-gray);
+}
+
+.setting-icon {
+  font-size: 24px;
+  color: var(--text-secondary);
+  margin-right: 16px;
+}
+
+.setting-label {
+  flex: 1;
+  color: var(--text-primary);
+}
+
+.setting-arrow {
+  font-size: 20px;
+  color: var(--text-placeholder);
 }
 
 /* 설정 섹션 */
