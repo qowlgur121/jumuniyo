@@ -30,47 +30,36 @@ const routes = [
         path: 'tab3',
         component: () => import('@/views/Tab3Page.vue'),
       },
+      {
+        path: 'tab4',
+        component: () => import('@/views/Tab4Page.vue'),
+      },
     ],
   },
   {
     path: '/auth/signup',
     name: 'SignUp',
     component: () => import('@/views/auth/SignUpPage.vue'),
-    meta: {
-      // hideTabs: true, // 필요시 App.vue에서 이 meta 정보를 활용하여 탭 숨김 처리
-    },
   },
   {
     path: '/auth/login',
     name: 'Login',
     component: () => import('@/views/auth/LoginPage.vue'),
-    meta: {
-      // hideTabs: true, // 필요시 App.vue에서 이 meta 정보를 활용하여 탭 숨김 처리
-    },
   },
   {
     path: '/auth/find-email',
     name: 'FindEmail',
     component: () => import('@/views/auth/FindEmailPage.vue'),
-    meta: {
-      // hideTabs: true, // 필요시 App.vue에서 이 meta 정보를 활용하여 탭 숨김 처리
-    },
   },
   {
     path: '/auth/find-password',
     name: 'FindPassword',
     component: () => import('@/views/auth/FindPasswordPage.vue'),
-    meta: {
-      // hideTabs: true, // 필요시 App.vue에서 이 meta 정보를 활용하여 탭 숨김 처리
-    },
   },
   {
     path: '/auth/reset-password',
     name: 'ResetPassword',
     component: () => import('@/views/auth/ResetPasswordPage.vue'),
-    meta: {
-      // hideTabs: true, // 필요시 App.vue에서 이 meta 정보를 활용하여 탭 숨김 처리
-    },
   },
 ];
 

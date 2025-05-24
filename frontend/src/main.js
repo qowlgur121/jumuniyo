@@ -35,6 +35,9 @@ import '@ionic/vue/css/palettes/dark.system.css';
 /* Theme variables */
 import './theme/variables.css';
 
+/* 반응형 디자인 CSS */
+import './styles/responsive.css';
+
 const pinia = createPinia();
 
 const app = createApp(App)
@@ -42,11 +45,11 @@ const app = createApp(App)
   .use(router)
   .use(pinia);
 
-router.isReady().then(async () => {
-  // Pinia 스토어 초기화 후 인증 상태 복원
-  const { useAuthStore } = await import('@/stores/auth');
-  const authStore = useAuthStore();
-  authStore.initializeAuth();
-  
+// 인증 상태 초기화
+import { useAuthStore } from '@/stores/auth';
+const authStore = useAuthStore();
+authStore.initializeAuth();
+
+router.isReady().then(() => {
   app.mount('#app');
 });

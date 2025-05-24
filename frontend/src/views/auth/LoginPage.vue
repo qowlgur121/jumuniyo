@@ -1,7 +1,7 @@
 <template>
   <ion-page>
-    <ion-content :fullscreen="true">
-      <div class="login-container">
+    <ion-content :fullscreen="true" class="safe-area-padding">
+      <div class="login-container responsive-container">
         <!-- 헤더 영역 -->
         <div class="header-section">
           <ion-button 
@@ -14,42 +14,42 @@
         </div>
 
         <!-- 로고 섹션 -->
-        <div class="logo-section">
-          <h1 class="app-logo">주문이요</h1>
-          <p class="welcome-message">로그인하고 다양한 혜택을 받아보세요!</p>
+        <div class="logo-section spacing-xl">
+          <h1 class="app-logo responsive-title">주문이요</h1>
+          <p class="welcome-message responsive-subtitle">로그인하고 다양한 혜택을 받아보세요!</p>
         </div>
 
         <!-- 폼 섹션 -->
         <div class="form-section">
           <form @submit.prevent="handleLogin">
             <!-- 이메일 주소 -->
-            <div class="input-group">
+            <div class="input-group spacing-sm">
               <ion-input
                 type="email"
                 v-model="formData.email"
                 name="email"
                 placeholder="이메일 주소 입력"
-                class="custom-input"
+                class="custom-input responsive-input"
                 @ionInput="validateField('email')"
                 :class="{ 'input-error': errors.email }"
               ></ion-input>
-              <ion-text color="danger" class="error-message" v-if="errors.email">
+              <ion-text color="danger" class="error-message responsive-small" v-if="errors.email">
                 {{ errors.email }}
               </ion-text>
             </div>
 
             <!-- 비밀번호 -->
-            <div class="input-group">
+            <div class="input-group spacing-sm">
               <ion-input
                 type="password"
                 v-model="formData.password"
                 name="password"
                 placeholder="비밀번호 입력"
-                class="custom-input"
+                class="custom-input responsive-input"
                 @ionInput="validateField('password')"
                 :class="{ 'input-error': errors.password }"
               ></ion-input>
-              <ion-text color="danger" class="error-message" v-if="errors.password">
+              <ion-text color="danger" class="error-message responsive-small" v-if="errors.password">
                 {{ errors.password }}
               </ion-text>
             </div>
@@ -58,7 +58,7 @@
             <ion-button 
               type="submit" 
               expand="block" 
-              class="login-button"
+              class="login-button responsive-button spacing-md"
               :disabled="isSubmitting || !isFormValid"
             >
               <ion-spinner v-if="isSubmitting" name="crescent" color="light"></ion-spinner>
@@ -67,26 +67,26 @@
           </form>
 
           <!-- 하단 링크들 -->
-          <div class="auth-links">
-            <span class="link-item" @click="goToSignUp">이메일 회원가입</span>
-            <span class="divider">|</span>
-            <span class="link-item" @click="goToFindEmail">이메일 찾기</span>
-            <span class="divider">|</span>
-            <span class="link-item" @click="goToFindPassword">비밀번호 찾기</span>
+          <div class="auth-links spacing-md">
+            <span class="link-item responsive-small" @click="goToSignUp">이메일 회원가입</span>
+            <span class="divider responsive-small">|</span>
+            <span class="link-item responsive-small" @click="goToFindEmail">이메일 찾기</span>
+            <span class="divider responsive-small">|</span>
+            <span class="link-item responsive-small" @click="goToFindPassword">비밀번호 찾기</span>
           </div>
         </div>
 
         <!-- 소셜 로그인 섹션 -->
-        <div class="social-login-section">
-          <div class="social-divider">
-            <span class="divider-text">또는</span>
+        <div class="social-login-section spacing-lg">
+          <div class="social-divider spacing-md">
+            <span class="divider-text responsive-small">또는</span>
           </div>
 
           <div class="social-buttons">
             <ion-button 
               expand="block" 
               fill="outline" 
-              class="social-button kakao-button"
+              class="social-button kakao-button responsive-button"
               @click="handleSocialLogin('kakao')"
             >
               <ion-icon :icon="chatbubbleOutline" slot="start"></ion-icon>
@@ -96,7 +96,7 @@
             <ion-button 
               expand="block" 
               fill="outline" 
-              class="social-button naver-button"
+              class="social-button naver-button responsive-button"
               @click="handleSocialLogin('naver')"
             >
               <span class="naver-icon" slot="start">N</span>
@@ -106,7 +106,7 @@
             <ion-button 
               expand="block" 
               fill="outline" 
-              class="social-button apple-button"
+              class="social-button apple-button responsive-button"
               @click="handleSocialLogin('apple')"
             >
               <ion-icon :icon="logoApple" slot="start"></ion-icon>
@@ -261,8 +261,7 @@ const goToFindPassword = () => {
   display: flex;
   flex-direction: column;
   min-height: 100vh;
-  background-color: #ffffff;
-  padding: 0 24px;
+  background-color: var(--background-white);
 }
 
 /* 헤더 영역 */
@@ -271,32 +270,32 @@ const goToFindPassword = () => {
   align-items: center;
   padding: 16px 0;
   position: relative;
+  min-height: 60px;
 }
 
 .back-button {
   position: absolute;
   left: -8px;
-  --color: #333;
+  --color: var(--text-primary);
   --background: transparent;
+  z-index: 10;
 }
 
 /* 로고 섹션 */
 .logo-section {
   text-align: center;
-  padding: 100px 0 80px 0;
+  padding: 60px 0 40px 0;
 }
 
 .app-logo {
-  font-size: 48px;
   font-weight: bold;
-  color: #ff1744;
+  color: var(--primary-red);
   margin: 0 0 16px 0;
   letter-spacing: -1px;
 }
 
 .welcome-message {
-  font-size: 16px;
-  color: #666;
+  color: var(--text-secondary);
   margin: 0;
 }
 
@@ -306,24 +305,23 @@ const goToFindPassword = () => {
 }
 
 .input-group {
-  margin-bottom: 16px;
+  width: 100%;
 }
 
 .custom-input {
-  --background: #f8f9fa;
+  --background: var(--background-light);
   --border-radius: 8px;
   --padding-start: 16px;
   --padding-end: 16px;
   --padding-top: 16px;
   --padding-bottom: 16px;
-  --color: #333;
-  --placeholder-color: #999;
+  --color: var(--text-primary);
+  --placeholder-color: var(--text-placeholder);
   --placeholder-opacity: 1;
-  border: 1px solid #e9ecef;
+  border: 1px solid var(--border-gray);
   border-radius: 8px;
-  font-size: 16px;
-  height: 56px;
-  background: #f8f9fa;
+  background: var(--background-light);
+  width: 100%;
 }
 
 .custom-input.input-error {
@@ -332,7 +330,7 @@ const goToFindPassword = () => {
 }
 
 .error-message {
-  font-size: 14px;
+  color: #dc3545;
   margin-top: 8px;
   margin-left: 4px;
   display: block;
@@ -340,45 +338,48 @@ const goToFindPassword = () => {
 
 /* 로그인 버튼 */
 .login-button {
-  --background: #ff1744;
-  --background-activated: #e50032;
-  --background-hover: #e50032;
+  --background: var(--primary-red);
+  --background-activated: var(--secondary-red);
+  --background-hover: var(--secondary-red);
   --border-radius: 8px;
   --color: white;
-  height: 56px;
-  font-size: 16px;
   font-weight: 600;
-  margin-top: 24px;
   --box-shadow: none;
+  width: 100%;
+  margin-top: 8px;
 }
 
 .login-button:disabled {
-  --background: #e9ecef;
-  --color: #999;
+  --background: var(--border-gray);
+  --color: var(--text-placeholder);
 }
 
 /* 하단 링크들 */
 .auth-links {
   text-align: center;
-  padding: 24px 0;
-  font-size: 14px;
-  color: #666;
+  color: var(--text-secondary);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
 }
 
 .link-item {
-  color: #666;
+  color: var(--text-secondary);
   text-decoration: none;
   cursor: pointer;
   padding: 8px;
+  transition: color 0.2s ease;
 }
 
 .link-item:hover {
-  color: #ff1744;
+  color: var(--primary-red);
 }
 
 .divider {
-  margin: 0 8px;
   color: #ccc;
+  margin: 0 4px;
 }
 
 /* 소셜 로그인 섹션 */
@@ -388,8 +389,8 @@ const goToFindPassword = () => {
 
 .social-divider {
   text-align: center;
-  margin: 32px 0;
   position: relative;
+  margin: 24px 0;
 }
 
 .social-divider::before {
@@ -399,14 +400,13 @@ const goToFindPassword = () => {
   left: 0;
   right: 0;
   height: 1px;
-  background-color: #e9ecef;
+  background-color: var(--border-gray);
 }
 
 .divider-text {
-  background-color: white;
+  background-color: var(--background-white);
   padding: 0 16px;
-  color: #999;
-  font-size: 14px;
+  color: var(--text-placeholder);
 }
 
 .social-buttons {
@@ -416,13 +416,12 @@ const goToFindPassword = () => {
 }
 
 .social-button {
-  height: 56px;
-  font-size: 16px;
   font-weight: 500;
   --border-radius: 8px;
-  --border-color: #e9ecef;
-  --color: #333;
-  --background: white;
+  --border-color: var(--border-gray);
+  --color: var(--text-primary);
+  --background: var(--background-white);
+  width: 100%;
 }
 
 .kakao-button {
@@ -456,18 +455,107 @@ const goToFindPassword = () => {
   --border-color: black;
 }
 
-/* 반응형 디자인 */
-@media (max-width: 480px) {
-  .login-container {
-    padding: 0 20px;
-  }
-  
-  .app-logo {
-    font-size: 40px;
-  }
-  
+/* ===========================================
+   태블릿 반응형 스타일 (768px ~ 1023px)
+   ========================================== */
+@media (min-width: 768px) and (max-width: 1023px) {
   .logo-section {
     padding: 80px 0 60px 0;
   }
+  
+  .header-section {
+    min-height: 70px;
+  }
+  
+  .social-buttons {
+    gap: 16px;
+  }
+  
+  .auth-links {
+    gap: 12px;
+  }
+  
+  .link-item {
+    padding: 12px;
+  }
+}
+
+/* ===========================================
+   데스크톱 반응형 스타일 (1024px+)
+   ========================================== */
+@media (min-width: 1024px) {
+  .logo-section {
+    padding: 100px 0 80px 0;
+  }
+  
+  .header-section {
+    min-height: 80px;
+  }
+  
+  .social-buttons {
+    gap: 16px;
+  }
+  
+  .auth-links {
+    gap: 16px;
+  }
+  
+  .link-item {
+    padding: 16px;
+  }
+  
+  /* 데스크톱 호버 효과 */
+  .link-item:hover {
+    transform: translateY(-1px);
+  }
+  
+  .social-button:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    transition: all 0.2s ease;
+  }
+  
+  .kakao-button:hover {
+    box-shadow: 0 4px 12px rgba(254, 229, 0, 0.3);
+  }
+  
+  .naver-button:hover {
+    box-shadow: 0 4px 12px rgba(3, 199, 90, 0.3);
+  }
+  
+  .apple-button:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  }
+}
+
+/* ===========================================
+   작은 모바일 화면 (320px ~ 480px)
+   ========================================== */
+@media (max-width: 480px) {
+  .logo-section {
+    padding: 40px 0 30px 0;
+  }
+  
+  .auth-links {
+    flex-direction: column;
+    gap: 16px;
+  }
+  
+  .divider {
+    display: none;
+  }
+  
+  .link-item {
+    padding: 16px;
+    border: 1px solid var(--border-gray);
+    border-radius: 8px;
+    width: 100%;
+    text-align: center;
+  }
+}
+
+/* 안전 영역 대응 */
+.safe-area-padding {
+  padding-bottom: max(40px, env(safe-area-inset-bottom));
 }
 </style> 

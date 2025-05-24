@@ -1,7 +1,7 @@
 <template>
   <ion-page>
-    <ion-content :fullscreen="true">
-      <div class="signup-container">
+    <ion-content :fullscreen="true" class="safe-area-padding">
+      <div class="signup-container responsive-container">
         <!-- 헤더 영역 -->
         <div class="header-section">
           <ion-button 
@@ -11,113 +11,153 @@
           >
             <ion-icon :icon="chevronBackOutline" size="large"></ion-icon>
           </ion-button>
-          <h1 class="page-title">회원가입</h1>
         </div>
 
         <!-- 로고 섹션 -->
-        <div class="logo-section">
-          <h1 class="app-logo">주문이요</h1>
+        <div class="logo-section spacing-lg">
+          <h1 class="app-logo responsive-title">주문이요</h1>
+          <p class="welcome-message responsive-subtitle">맛있는 음식을 주문하고 즐기세요!</p>
         </div>
 
         <!-- 폼 섹션 -->
         <div class="form-section">
           <form @submit.prevent="handleSignUp">
             <!-- 이메일 주소 -->
-            <div class="input-group">
+            <div class="input-group spacing-sm">
               <ion-input
                 type="email"
                 v-model="formData.email"
                 name="email"
                 placeholder="이메일 주소 입력"
-                class="custom-input"
+                class="custom-input responsive-input"
                 @ionInput="validateField('email')"
-                :class="{ 'input-error': errors.email, 'input-valid': !errors.email && formData.email }"
+                :class="{ 'input-error': errors.email }"
               ></ion-input>
-              <ion-text color="danger" class="error-message" v-if="errors.email">
+              <ion-text color="danger" class="error-message responsive-small" v-if="errors.email">
                 {{ errors.email }}
               </ion-text>
             </div>
 
             <!-- 비밀번호 -->
-            <div class="input-group">
+            <div class="input-group spacing-sm">
               <ion-input
                 type="password"
                 v-model="formData.password"
                 name="password"
-                placeholder="영문, 숫자, 특수문자 포함 8자리 이상"
-                class="custom-input"
+                placeholder="비밀번호 입력 (8자 이상)"
+                class="custom-input responsive-input"
                 @ionInput="validateField('password')"
-                :class="{ 'input-error': errors.password, 'input-valid': !errors.password && formData.password }"
+                :class="{ 'input-error': errors.password }"
               ></ion-input>
-              <ion-text color="danger" class="error-message" v-if="errors.password">
+              <ion-text color="danger" class="error-message responsive-small" v-if="errors.password">
                 {{ errors.password }}
               </ion-text>
             </div>
 
             <!-- 비밀번호 확인 -->
-            <div class="input-group">
+            <div class="input-group spacing-sm">
               <ion-input
                 type="password"
-                v-model="formData.passwordConfirm"
-                name="passwordConfirm"
-                placeholder="비밀번호 재입력"
-                class="custom-input"
-                @ionInput="validateField('passwordConfirm')"
-                :class="{ 'input-error': errors.passwordConfirm, 'input-valid': !errors.passwordConfirm && formData.passwordConfirm }"
+                v-model="formData.confirmPassword"
+                name="confirmPassword"
+                placeholder="비밀번호 확인"
+                class="custom-input responsive-input"
+                @ionInput="validateField('confirmPassword')"
+                :class="{ 'input-error': errors.confirmPassword }"
               ></ion-input>
-              <ion-text color="danger" class="error-message" v-if="errors.passwordConfirm">
-                {{ errors.passwordConfirm }}
+              <ion-text color="danger" class="error-message responsive-small" v-if="errors.confirmPassword">
+                {{ errors.confirmPassword }}
               </ion-text>
             </div>
 
             <!-- 닉네임 -->
-            <div class="input-group">
+            <div class="input-group spacing-sm">
               <ion-input
                 type="text"
                 v-model="formData.nickname"
                 name="nickname"
-                placeholder="닉네임"
-                class="custom-input"
+                placeholder="닉네임 입력"
+                class="custom-input responsive-input"
                 @ionInput="validateField('nickname')"
-                :class="{ 'input-error': errors.nickname, 'input-valid': !errors.nickname && formData.nickname }"
+                :class="{ 'input-error': errors.nickname }"
               ></ion-input>
-              <ion-text color="danger" class="error-message" v-if="errors.nickname">
+              <ion-text color="danger" class="error-message responsive-small" v-if="errors.nickname">
                 {{ errors.nickname }}
               </ion-text>
             </div>
 
             <!-- 전화번호 -->
-            <div class="input-group">
+            <div class="input-group spacing-sm">
               <ion-input
                 type="tel"
                 v-model="formData.phoneNumber"
                 name="phoneNumber"
-                placeholder="전화번호 (예: 010-1234-5678)"
-                class="custom-input"
+                placeholder="전화번호 입력 (010-1234-5678)"
+                class="custom-input responsive-input"
                 @ionInput="validateField('phoneNumber')"
-                :class="{ 'input-error': errors.phoneNumber, 'input-valid': !errors.phoneNumber && formData.phoneNumber }"
+                :class="{ 'input-error': errors.phoneNumber }"
               ></ion-input>
-              <ion-text color="danger" class="error-message" v-if="errors.phoneNumber">
+              <ion-text color="danger" class="error-message responsive-small" v-if="errors.phoneNumber">
                 {{ errors.phoneNumber }}
               </ion-text>
             </div>
 
-            <!-- 가입하기 버튼 -->
+            <!-- 회원가입 버튼 -->
             <ion-button 
               type="submit" 
               expand="block" 
-              class="signup-button"
+              class="signup-button responsive-button spacing-md"
               :disabled="isSubmitting || !isFormValid"
             >
               <ion-spinner v-if="isSubmitting" name="crescent" color="light"></ion-spinner>
-              <span v-else>다음</span>
+              <span v-else>회원가입</span>
             </ion-button>
           </form>
+
+          <!-- 하단 링크들 -->
+          <div class="auth-links spacing-md">
+            <span class="responsive-small">이미 계정이 있나요?</span>
+            <span class="link-item responsive-small" @click="goToLogin">로그인</span>
+          </div>
         </div>
 
-        <!-- 하단 링크들 -->
-        <div class="bottom-links">
-          <span class="link-item" @click="goToLogin">이미 계정이 있나요? 로그인</span>
+        <!-- 소셜 로그인 섹션 -->
+        <div class="social-login-section spacing-lg">
+          <div class="social-divider spacing-md">
+            <span class="divider-text responsive-small">또는</span>
+          </div>
+
+          <div class="social-buttons">
+            <ion-button 
+              expand="block" 
+              fill="outline" 
+              class="social-button kakao-button responsive-button"
+              @click="handleSocialLogin('kakao')"
+            >
+              <ion-icon :icon="chatbubbleOutline" slot="start"></ion-icon>
+              카카오로 가입
+            </ion-button>
+
+            <ion-button 
+              expand="block" 
+              fill="outline" 
+              class="social-button naver-button responsive-button"
+              @click="handleSocialLogin('naver')"
+            >
+              <span class="naver-icon" slot="start">N</span>
+              네이버로 가입
+            </ion-button>
+
+            <ion-button 
+              expand="block" 
+              fill="outline" 
+              class="social-button apple-button responsive-button"
+              @click="handleSocialLogin('apple')"
+            >
+              <ion-icon :icon="logoApple" slot="start"></ion-icon>
+              Apple로 가입
+            </ion-button>
+          </div>
         </div>
       </div>
     </ion-content>
@@ -128,7 +168,7 @@
 import { ref, reactive, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '@/stores/auth';
-import { chevronBackOutline } from 'ionicons/icons';
+import { chevronBackOutline, chatbubbleOutline, logoApple } from 'ionicons/icons';
 import {
   IonPage,
   IonContent,
@@ -148,7 +188,7 @@ const authStore = useAuthStore();
 const formData = reactive({
   email: '',
   password: '',
-  passwordConfirm: '',
+  confirmPassword: '',
   nickname: '',
   phoneNumber: '',
 });
@@ -156,7 +196,7 @@ const formData = reactive({
 const errors = reactive({
   email: '',
   password: '',
-  passwordConfirm: '',
+  confirmPassword: '',
   nickname: '',
   phoneNumber: '',
 });
@@ -176,9 +216,9 @@ const validateField = (fieldName) => {
         errors.password = '8~20자 영문, 숫자, 특수문자를 모두 포함해야 합니다.';
       }
       break;
-    case 'passwordConfirm':
-      if (!formData.passwordConfirm) errors.passwordConfirm = '비밀번호 확인을 입력해주세요.';
-      else if (formData.password !== formData.passwordConfirm) errors.passwordConfirm = '비밀번호가 일치하지 않습니다.';
+    case 'confirmPassword':
+      if (!formData.confirmPassword) errors.confirmPassword = '비밀번호 확인을 입력해주세요.';
+      else if (formData.password !== formData.confirmPassword) errors.confirmPassword = '비밀번호가 일치하지 않습니다.';
       break;
     case 'nickname':
       if (!formData.nickname) errors.nickname = '닉네임을 입력해주세요.';
@@ -195,15 +235,15 @@ const validateField = (fieldName) => {
 const validateForm = () => {
   validateField('email');
   validateField('password');
-  validateField('passwordConfirm');
+  validateField('confirmPassword');
   validateField('nickname');
   validateField('phoneNumber');
   return !Object.values(errors).some(error => error !== '');
 };
 
 const isFormValid = computed(() => {
-  return formData.email && formData.password && formData.passwordConfirm && formData.nickname && formData.phoneNumber &&
-         !errors.email && !errors.password && !errors.passwordConfirm && !errors.nickname && !errors.phoneNumber;
+  return formData.email && formData.password && formData.confirmPassword && formData.nickname && formData.phoneNumber &&
+         !errors.email && !errors.password && !errors.confirmPassword && !errors.nickname && !errors.phoneNumber;
 });
 
 const handleSignUp = async () => {
@@ -250,6 +290,11 @@ const handleSignUp = async () => {
 const goToLogin = () => {
   router.push('/auth/login');
 };
+
+const handleSocialLogin = (provider) => {
+  // 소셜 로그인 처리 로직을 구현해야 합니다.
+  console.log(`Social login with ${provider}`);
+};
 </script>
 
 <style scoped>
@@ -258,8 +303,7 @@ const goToLogin = () => {
   display: flex;
   flex-direction: column;
   min-height: 100vh;
-  background-color: #ffffff;
-  padding: 0 24px;
+  background-color: var(--background-white);
 }
 
 /* 헤더 영역 */
@@ -268,69 +312,58 @@ const goToLogin = () => {
   align-items: center;
   padding: 16px 0;
   position: relative;
+  min-height: 60px;
 }
 
 .back-button {
   position: absolute;
   left: -8px;
-  --color: #333;
+  --color: var(--text-primary);
   --background: transparent;
-}
-
-.page-title {
-  font-size: 18px;
-  font-weight: 600;
-  color: #333;
-  margin: 0;
-  text-align: center;
-  flex: 1;
+  z-index: 10;
 }
 
 /* 로고 섹션 */
 .logo-section {
   text-align: center;
-  padding: 60px 0 80px 0;
+  padding: 40px 0 30px 0;
 }
 
 .app-logo {
-  font-size: 48px;
   font-weight: bold;
-  color: #ff1744;
-  margin: 0;
+  color: var(--primary-red);
+  margin: 0 0 16px 0;
   letter-spacing: -1px;
+}
+
+.welcome-message {
+  color: var(--text-secondary);
+  margin: 0;
 }
 
 /* 폼 섹션 */
 .form-section {
   flex: 1;
-  display: flex;
-  flex-direction: column;
 }
 
 .input-group {
-  margin-bottom: 16px;
+  width: 100%;
 }
 
 .custom-input {
-  --background: #f8f9fa;
+  --background: var(--background-light);
   --border-radius: 8px;
   --padding-start: 16px;
   --padding-end: 16px;
   --padding-top: 16px;
   --padding-bottom: 16px;
-  --color: #333;
-  --placeholder-color: #999;
+  --color: var(--text-primary);
+  --placeholder-color: var(--text-placeholder);
   --placeholder-opacity: 1;
-  border: 1px solid #e9ecef;
+  border: 1px solid var(--border-gray);
   border-radius: 8px;
-  font-size: 16px;
-  height: 56px;
-  background: #f8f9fa;
-}
-
-.custom-input.input-valid {
-  --background: #f8fff8;
-  border-color: #28a745;
+  background: var(--background-light);
+  width: 100%;
 }
 
 .custom-input.input-error {
@@ -339,67 +372,224 @@ const goToLogin = () => {
 }
 
 .error-message {
-  font-size: 14px;
+  color: #dc3545;
   margin-top: 8px;
   margin-left: 4px;
   display: block;
 }
 
-/* 가입하기 버튼 */
+/* 회원가입 버튼 */
 .signup-button {
-  --background: #ff1744;
-  --background-activated: #e50032;
-  --background-hover: #e50032;
+  --background: var(--primary-red);
+  --background-activated: var(--secondary-red);
+  --background-hover: var(--secondary-red);
   --border-radius: 8px;
   --color: white;
-  height: 56px;
-  font-size: 16px;
   font-weight: 600;
-  margin-top: 24px;
   --box-shadow: none;
+  width: 100%;
+  margin-top: 8px;
 }
 
 .signup-button:disabled {
-  --background: #e9ecef;
-  --color: #999;
+  --background: var(--border-gray);
+  --color: var(--text-placeholder);
 }
 
 /* 하단 링크들 */
-.bottom-links {
+.auth-links {
   text-align: center;
-  padding: 40px 0;
-  font-size: 14px;
-  color: #666;
+  color: var(--text-secondary);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
 }
 
 .link-item {
-  color: #666;
+  color: var(--primary-red);
   text-decoration: none;
   cursor: pointer;
   padding: 8px;
+  font-weight: 600;
+  transition: color 0.2s ease;
 }
 
 .link-item:hover {
-  color: #ff1744;
+  color: var(--secondary-red);
 }
 
-.divider {
-  margin: 0 8px;
-  color: #ccc;
+/* 소셜 로그인 섹션 */
+.social-login-section {
+  padding-bottom: 40px;
 }
 
-/* 반응형 디자인 */
-@media (max-width: 480px) {
-  .signup-container {
-    padding: 0 20px;
-  }
-  
-  .app-logo {
-    font-size: 40px;
-  }
-  
+.social-divider {
+  text-align: center;
+  position: relative;
+  margin: 24px 0;
+}
+
+.social-divider::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background-color: var(--border-gray);
+}
+
+.divider-text {
+  background-color: var(--background-white);
+  padding: 0 16px;
+  color: var(--text-placeholder);
+}
+
+.social-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.social-button {
+  font-weight: 500;
+  --border-radius: 8px;
+  --border-color: var(--border-gray);
+  --color: var(--text-primary);
+  --background: var(--background-white);
+  width: 100%;
+}
+
+.kakao-button {
+  --background: #fee500;
+  --color: #3c1e1e;
+  --border-color: #fee500;
+}
+
+.naver-button {
+  --background: #03c75a;
+  --color: white;
+  --border-color: #03c75a;
+}
+
+.naver-icon {
+  background: white;
+  color: #03c75a;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 14px;
+}
+
+.apple-button {
+  --background: black;
+  --color: white;
+  --border-color: black;
+}
+
+/* ===========================================
+   태블릿 반응형 스타일 (768px ~ 1023px)
+   ========================================== */
+@media (min-width: 768px) and (max-width: 1023px) {
   .logo-section {
-    padding: 40px 0 60px 0;
+    padding: 60px 0 40px 0;
   }
+  
+  .header-section {
+    min-height: 70px;
+  }
+  
+  .social-buttons {
+    gap: 16px;
+  }
+  
+  .auth-links {
+    gap: 12px;
+  }
+  
+  .link-item {
+    padding: 12px;
+  }
+}
+
+/* ===========================================
+   데스크톱 반응형 스타일 (1024px+)
+   ========================================== */
+@media (min-width: 1024px) {
+  .logo-section {
+    padding: 80px 0 60px 0;
+  }
+  
+  .header-section {
+    min-height: 80px;
+  }
+  
+  .social-buttons {
+    gap: 16px;
+  }
+  
+  .auth-links {
+    gap: 16px;
+  }
+  
+  .link-item {
+    padding: 16px;
+  }
+  
+  /* 데스크톱 호버 효과 */
+  .link-item:hover {
+    transform: translateY(-1px);
+  }
+  
+  .social-button:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    transition: all 0.2s ease;
+  }
+  
+  .kakao-button:hover {
+    box-shadow: 0 4px 12px rgba(254, 229, 0, 0.3);
+  }
+  
+  .naver-button:hover {
+    box-shadow: 0 4px 12px rgba(3, 199, 90, 0.3);
+  }
+  
+  .apple-button:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  }
+}
+
+/* ===========================================
+   작은 모바일 화면 (320px ~ 480px)
+   ========================================== */
+@media (max-width: 480px) {
+  .logo-section {
+    padding: 30px 0 20px 0;
+  }
+  
+  .auth-links {
+    flex-direction: column;
+    gap: 16px;
+  }
+  
+  .link-item {
+    padding: 16px;
+    border: 1px solid var(--primary-red);
+    border-radius: 8px;
+    width: 100%;
+    text-align: center;
+  }
+}
+
+/* 안전 영역 대응 */
+.safe-area-padding {
+  padding-bottom: max(40px, env(safe-area-inset-bottom));
 }
 </style>
