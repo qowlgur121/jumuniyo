@@ -2,7 +2,10 @@ package com.jumuniyo.service.user; // 본인의 패키지 경로에 맞게 수�
 
 import com.jumuniyo.domain.user.User;
 import com.jumuniyo.dto.user.UserSignUpRequestDto;
+import com.jumuniyo.dto.user.UserLoginRequestDto;
+import com.jumuniyo.dto.user.UserLoginResponseDto;
 import com.jumuniyo.repository.user.UserRepository;
+import com.jumuniyo.security.JwtTokenProvider;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -16,6 +19,7 @@ public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository; // 생성자 주입
     private final PasswordEncoder passwordEncoder; // 생성자 주입 (Spring Security 설정에서 빈으로 등록 예정)
+    private final JwtTokenProvider jwtTokenProvider; // JWT 토큰 생성을 위한 의존성 주입
 
     @Override
     @Transactional // 데이터 변경이 있으므로 트랜잭션 적용 (readOnly = false가 기본값)
@@ -42,6 +46,28 @@ public class UserServiceImpl implements UserService {
         // 현재 UserSignUpRequestDto.toEntity()에서 초기 상태를 PENDING_EMAIL_VERIFICATION으로 설정함
 
         // 회원가입 성공 후 추가 작업이 있다면 여기에 구현 (예: 알림, 로그 기록 등)
+    }
+
+    @Override
+    @Transactional // 로그인 시간 업데이트를 위한 트랜잭션
+    public UserLoginResponseDto login(UserLoginRequestDto requestDto) {
+        // 1. 이메일로 사용자 조회
+        User user = userRepository.findByEmail(requestDto.getEmail())
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 이메일입니다: " + requestDto.getEmail()));
+
+        // 2. 비밀번호 검증
+        if (!passwordEncoder.matches(requestDto.getPassword(), user.getPassword())) {
+            throw new IllegalArgumentException("비밀번호가 일치하지 않습니다.");
+        }
+
+        // 3. 마지막 로그인 시간 업데이트
+        user.recordLastLogin();
+
+        // 4. JWT 토큰 생성
+        String token = jwtTokenProvider.createToken(user.getEmail(), user.getRole().name());
+
+        // 5. 응답 DTO 생성 및 반환
+        return UserLoginResponseDto.of(token, user);
     }
 
     // TODO: 추후 로그인, 회원정보 조회/수정 등의 메소드 구현

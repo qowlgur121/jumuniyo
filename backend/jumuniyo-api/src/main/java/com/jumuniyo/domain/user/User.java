@@ -26,11 +26,14 @@ public class User {
     @Column(nullable = false, unique = true, length = 100) // 데이터베이스 컬럼 설정임. '반드시 값이 있어야 함(nullable=false)', '다른 값과 중복되면 안 됨(unique=true)', '최대 100자까지 허용함(length=100)' 이라는 뜻임.
     private String email; // 사용자 이메일
 
-    @Column(nullable = false) // '반드시 값이 있어야 함(nullable=false)' 설정임.
+    @Column(nullable = true) // OAuth2 로그인 사용자는 비밀번호가 없을 수 있으므로 nullable = true로 변경
     private String password; // 암호화된 비밀번호를 저장할 것임. (실제 비밀번호가 아니라 변환된 값을 넣을 것임)
 
     @Column(nullable = false, unique = true, length = 50) // '반드시 값이 있어야 함', '중복되면 안 됨', '최대 50자' 설정임.
     private String nickname; // 사용자 닉네임
+
+    @Column(length = 20) // 전화번호 필드 추가 (이메일 찾기 기능용)
+    private String phoneNumber; // 사용자 전화번호
 
     @Enumerated(EnumType.STRING) // 아래 role 이라는 필드는 UserRole 이라는 정해진 목록(Enum) 타입인데, 데이터베이스에는 그 목록의 '이름'(예: "ROLE_USER")을 문자열로 저장하라는 뜻임. (EnumType.ORDINAL 은 순서 숫자로 저장해서 나중에 목록 순서 바뀌면 문제가 될 수 있음)
     @Column(nullable = false, length = 20) // '반드시 값이 있어야 함', '최대 20자' 설정임.
@@ -41,6 +44,13 @@ public class User {
     private UserStatus status; // 사용자의 계정 상태 (예: 활성, 비활성, 이메일 인증 대기 등)
 
     private String profileImageUrl; // 프로필 이미지 주소 (이건 필수가 아님)
+
+    // OAuth2 소셜 로그인 관련 필드 추가
+    @Column(length = 20) // OAuth2 제공자 이름 (google, naver, kakao 등)
+    private String provider;
+
+    @Column(length = 100) // OAuth2 제공자에서 제공하는 사용자 고유 ID
+    private String providerId;
 
     @CreatedDate // @EntityListeners(AuditingEntityListener.class) 덕분에, 이 Entity가 데이터베이스에 '처음 저장될 때' 현재 시간이 자동으로 여기에 기록됨.
     @Column(nullable = false, updatable = false) // '반드시 값이 있어야 함', '한번 저장되면 나중에 절대로 수정될 수 없음(updatable=false)' 설정임.
@@ -55,13 +65,16 @@ public class User {
     // 생성자 부분임 (객체를 만들 때 초기 값들을 넣어주는 역할임)
     // @Builder 라는 Lombok 기능을 사용하면, 좀 더 보기 좋고 안전하게 객체를 만들 수 있음.
     @Builder // Lombok: 이 생성자를 사용해서 User 객체를 만들 때 'User.builder().email("...").password("...").build()' 와 같은 형태로 만들 수 있게 해줌.
-    public User(String email, String password, String nickname, UserRole role, UserStatus status, String profileImageUrl) {
+    public User(String email, String password, String nickname, String phoneNumber, UserRole role, UserStatus status, String profileImageUrl, String provider, String providerId) {
         this.email = email;
         this.password = password; // 여기서 받는 비밀번호는 이미 암호화된 상태의 값이어야 함.
         this.nickname = nickname;
+        this.phoneNumber = phoneNumber;
         this.role = role;
         this.status = status;
         this.profileImageUrl = profileImageUrl;
+        this.provider = provider;
+        this.providerId = providerId;
     }
 
     // --- 편의 메소드 (이 엔티티 객체 자체와 관련된 간단한 기능들을 여기에 추가할 수 있음) ---
@@ -81,6 +94,10 @@ public class User {
         this.status = status;
     }
 
+    public void updatePhoneNumber(String phoneNumber) { // 전화번호를 변경하는 기능임.
+        this.phoneNumber = phoneNumber;
+    }
+
     public void recordLastLogin() { // 마지막 로그인 시간을 현재 시간으로 기록하는 기능임.
         this.lastLoginAt = LocalDateTime.now();
     }
@@ -90,6 +107,42 @@ public class User {
         if (this.status == UserStatus.PENDING_EMAIL_VERIFICATION) { // 현재 상태가 '이메일 인증 대기' 라면
             this.status = UserStatus.ACTIVE; // 상태를 '활성'으로 바꾸고
             this.role = UserRole.ROLE_USER; // 역할을 '일반 사용자'로 바꾸는 예시 로직임.
+        }
+    }
+
+    // OAuth2 소셜 로그인 사용자 여부 확인
+    public boolean isOAuth2User() {
+        return provider != null && providerId != null;
+    }
+
+    // OAuth2 사용자의 프로필 정보 업데이트
+    public void updateOAuth2Profile(String name, String imageUrl) {
+        if (name != null && !name.trim().isEmpty()) {
+            this.nickname = name;
+        }
+        if (imageUrl != null && !imageUrl.trim().isEmpty()) {
+            this.profileImageUrl = imageUrl;
+        }
+    }
+
+    // 이메일 마스킹 처리 (개인정보 보호)
+    public String getMaskedEmail() {
+        if (email == null || email.isEmpty()) {
+            return "";
+        }
+        
+        String[] parts = email.split("@");
+        if (parts.length != 2) {
+            return email; // 잘못된 이메일 형식인 경우 그대로 반환
+        }
+        
+        String localPart = parts[0];
+        String domain = parts[1];
+        
+        if (localPart.length() <= 3) {
+            return localPart.charAt(0) + "***@" + domain;
+        } else {
+            return localPart.substring(0, 3) + "***@" + domain;
         }
     }
 }

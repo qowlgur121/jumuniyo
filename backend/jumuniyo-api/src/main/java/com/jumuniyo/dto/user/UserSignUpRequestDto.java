@@ -37,6 +37,10 @@ public class UserSignUpRequestDto { // 사용자 회원가입 요청 시 클라�
     @Pattern(regexp = "^[가-힣A-Za-z0-9]*$", message = "닉네임은 한글, 영문, 숫자만 사용 가능합니다.") // 닉네임은 한글, 영문, 숫자만 사용할 수 있음.
     private String nickname; // 사용자가 입력한 닉네임임.
 
+    @NotBlank(message = "전화번호는 필수 입력 값입니다.")
+    @Pattern(regexp = "^\\d{2,3}-\\d{3,4}-\\d{4}$", message = "전화번호는 올바른 형식으로 입력해주세요. (예: 010-1234-5678)")
+    private String phoneNumber; // 사용자가 입력한 전화번호임.
+
     // 이 DTO에 담긴 데이터를 User Entity 객체로 변환해주는 기능임.
     // 데이터베이스에 저장하기 위해 DTO 형식을 Entity 형식으로 바꿔주는 것임.
     // 비밀번호는 여기서는 **아직 암호화하지 않음**. 암호화는 나중에 '서비스(Service)' 부분에서 할 것임.
@@ -45,6 +49,7 @@ public class UserSignUpRequestDto { // 사용자 회원가입 요청 시 클라�
                 .email(this.email) // 이 DTO의 이메일 값을 User Entity의 이메일로 설정함.
                 .password(encodedPassword) // DTO의 password 필드(암호화 전)가 아니라, **암호화된 비밀번호**를 Entity의 password 필드에 설정함.
                 .nickname(this.nickname) // 이 DTO의 닉네임 값을 User Entity의 닉네임으로 설정함.
+                .phoneNumber(this.phoneNumber) // 이 DTO의 전화번호 값을 User Entity의 전화번호로 설정함.
                 .role(UserRole.ROLE_USER) // 회원가입 시 기본 역할은 일반 사용자로 설정함. (서비스 정책에 따라 바뀔 수 있음. 예: 이메일 인증 전에는 GUEST)
                 .status(UserStatus.PENDING_EMAIL_VERIFICATION) // 회원가입 직후 상태는 '이메일 인증 대기'로 설정함. (요구사항 FR-U01 반영)
                 // .profileImageUrl(null) // 프로필 이미지는 나중에 등록하므로 일단 null 이나 기본 이미지 URL로 설정할 수 있음.
@@ -53,9 +58,10 @@ public class UserSignUpRequestDto { // 사용자 회원가입 요청 시 클라�
 
     // 이 DTO 객체를 빌더 패턴으로 쉽게 만들 수 있도록 하는 생성자임. (주로 테스트 코드 등에서 객체 만들 때 편리함)
     @Builder
-    public UserSignUpRequestDto(String email, String password, String nickname) {
+    public UserSignUpRequestDto(String email, String password, String nickname, String phoneNumber) {
         this.email = email;
         this.password = password;
         this.nickname = nickname;
+        this.phoneNumber = phoneNumber;
     }
 }

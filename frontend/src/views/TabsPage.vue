@@ -14,8 +14,8 @@
         </ion-tab-button>
 
         <ion-tab-button tab="tab3" href="/tabs/tab3">
-          <ion-icon aria-hidden="true" :icon="square" />
-          <ion-label>Tab 3</ion-label>
+          <ion-icon aria-hidden="true" :icon="person" />
+          <ion-label>프로필</ion-label>
         </ion-tab-button>
       </ion-tab-bar>
     </ion-tabs>
@@ -24,5 +24,5 @@
 
 <script setup lang="ts"> // 또는 lang="js"
 import { IonTabBar, IonTabButton, IonTabs, IonLabel, IonIcon, IonPage, IonRouterOutlet } from '@ionic/vue';
-import { ellipse, square, triangle } from 'ionicons/icons'; // Ionicons 아이콘 임포트
+import { ellipse, square, triangle, person } from 'ionicons/icons'; // Ionicons 아이콘 임포트
 </script>

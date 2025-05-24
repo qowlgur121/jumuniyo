@@ -86,6 +86,22 @@
               </ion-text>
             </div>
 
+            <!-- 전화번호 -->
+            <div class="input-group">
+              <ion-input
+                type="tel"
+                v-model="formData.phoneNumber"
+                name="phoneNumber"
+                placeholder="전화번호 (예: 010-1234-5678)"
+                class="custom-input"
+                @ionInput="validateField('phoneNumber')"
+                :class="{ 'input-error': errors.phoneNumber, 'input-valid': !errors.phoneNumber && formData.phoneNumber }"
+              ></ion-input>
+              <ion-text color="danger" class="error-message" v-if="errors.phoneNumber">
+                {{ errors.phoneNumber }}
+              </ion-text>
+            </div>
+
             <!-- 가입하기 버튼 -->
             <ion-button 
               type="submit" 
@@ -101,11 +117,7 @@
 
         <!-- 하단 링크들 -->
         <div class="bottom-links">
-          <span class="link-item" @click="goToLogin">이메일 회원가입</span>
-          <span class="divider">|</span>
-          <span class="link-item" @click="goToLogin">이메일 찾기</span>
-          <span class="divider">|</span>
-          <span class="link-item" @click="goToLogin">비밀번호 찾기</span>
+          <span class="link-item" @click="goToLogin">이미 계정이 있나요? 로그인</span>
         </div>
       </div>
     </ion-content>
@@ -115,6 +127,7 @@
 <script setup>
 import { ref, reactive, computed } from 'vue';
 import { useRouter } from 'vue-router';
+import { useAuthStore } from '@/stores/auth';
 import { chevronBackOutline } from 'ionicons/icons';
 import {
   IonPage,
@@ -130,12 +143,14 @@ import {
 import apiClient from '@/services/api';
 
 const router = useRouter();
+const authStore = useAuthStore();
 
 const formData = reactive({
   email: '',
   password: '',
   passwordConfirm: '',
   nickname: '',
+  phoneNumber: '',
 });
 
 const errors = reactive({
@@ -143,9 +158,10 @@ const errors = reactive({
   password: '',
   passwordConfirm: '',
   nickname: '',
+  phoneNumber: '',
 });
 
-const isSubmitting = ref(false);
+const isSubmitting = computed(() => authStore.isLoading);
 
 const validateField = (fieldName) => {
   errors[fieldName] = '';
@@ -169,6 +185,10 @@ const validateField = (fieldName) => {
       else if (formData.nickname.length < 2 || formData.nickname.length > 10) errors.nickname = '닉네임은 2~10자로 입력해주세요.';
       else if (!/^[가-힣A-Za-z0-9]*$/.test(formData.nickname)) errors.nickname = '닉네임은 한글, 영문, 숫자만 사용 가능합니다.';
       break;
+    case 'phoneNumber':
+      if (!formData.phoneNumber) errors.phoneNumber = '전화번호를 입력해주세요.';
+      else if (!/^\d{2,3}-\d{3,4}-\d{4}$/.test(formData.phoneNumber)) errors.phoneNumber = '유효한 전화번호 형식을 입력해주세요. (예: 010-1234-5678)';
+      break;
   }
 };
 
@@ -177,12 +197,13 @@ const validateForm = () => {
   validateField('password');
   validateField('passwordConfirm');
   validateField('nickname');
+  validateField('phoneNumber');
   return !Object.values(errors).some(error => error !== '');
 };
 
 const isFormValid = computed(() => {
-  return formData.email && formData.password && formData.passwordConfirm && formData.nickname &&
-         !errors.email && !errors.password && !errors.passwordConfirm && !errors.nickname;
+  return formData.email && formData.password && formData.passwordConfirm && formData.nickname && formData.phoneNumber &&
+         !errors.email && !errors.password && !errors.passwordConfirm && !errors.nickname && !errors.phoneNumber;
 });
 
 const handleSignUp = async () => {
@@ -200,46 +221,29 @@ const handleSignUp = async () => {
     return;
   }
 
-  isSubmitting.value = true;
-  try {
-    const payload = {
-      email: formData.email,
-      password: formData.password,
-      nickname: formData.nickname,
-    };
-    const response = await apiClient.post('/auth/signup', payload);
+  const result = await authStore.signup({
+    email: formData.email,
+    password: formData.password,
+    nickname: formData.nickname,
+    phoneNumber: formData.phoneNumber,
+  });
 
-    if (response.status === 201) {
-      const toast = await toastController.create({
-        message: '회원가입에 성공했습니다! 이메일 인증을 진행해주세요.',
-        duration: 3000,
-        color: 'success',
-        position: 'top',
-      });
-      await toast.present();
-      router.push('/auth/login');
-    }
-  } catch (error) {
-    console.error('회원가입 실패:', error);
-    let errorMessage = '회원가입 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.';
-    if (error.response && error.response.data) {
-      if (typeof error.response.data === 'string') {
-        errorMessage = error.response.data;
-      } else if (error.response.data.message) {
-        errorMessage = error.response.data.message;
-      } else if (error.response.data.errors && error.response.data.errors.length > 0) {
-        errorMessage = error.response.data.errors.map((e) => e.defaultMessage).join('\n');
-      }
-    }
-
+  if (result.success) {
+    const toast = await toastController.create({
+      message: '회원가입이 완료되었습니다! 로그인해주세요.',
+      duration: 3000,
+      color: 'success',
+      position: 'top',
+    });
+    await toast.present();
+    router.push('/auth/login');
+  } else {
     const alert = await alertController.create({
       header: '회원가입 실패',
-      message: errorMessage,
+      message: result.error,
       buttons: ['확인'],
     });
     await alert.present();
-  } finally {
-    isSubmitting.value = false;
   }
 };
 

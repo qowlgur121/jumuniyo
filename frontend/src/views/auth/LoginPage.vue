@@ -68,7 +68,7 @@
 
           <!-- 하단 링크들 -->
           <div class="auth-links">
-            <span class="link-item" @click="goToFindEmail">이메일 회원가입</span>
+            <span class="link-item" @click="goToSignUp">이메일 회원가입</span>
             <span class="divider">|</span>
             <span class="link-item" @click="goToFindEmail">이메일 찾기</span>
             <span class="divider">|</span>
@@ -112,16 +112,6 @@
               <ion-icon :icon="logoApple" slot="start"></ion-icon>
               Apple로 로그인
             </ion-button>
-
-            <ion-button 
-              expand="block" 
-              fill="outline" 
-              class="social-button email-button"
-              @click="goToSignUp"
-            >
-              <ion-icon :icon="mailOutline" slot="start"></ion-icon>
-              이메일로 로그인
-            </ion-button>
           </div>
         </div>
       </div>
@@ -132,6 +122,7 @@
 <script setup>
 import { ref, reactive, computed } from 'vue';
 import { useRouter } from 'vue-router';
+import { useAuthStore } from '@/stores/auth';
 import { 
   chevronBackOutline, 
   chatbubbleOutline, 
@@ -152,6 +143,7 @@ import {
 import apiClient from '@/services/api';
 
 const router = useRouter();
+const authStore = useAuthStore();
 
 const formData = reactive({
   email: '',
@@ -163,7 +155,7 @@ const errors = reactive({
   password: '',
 });
 
-const isSubmitting = ref(false);
+const isSubmitting = computed(() => authStore.isLoading);
 
 const validateField = (fieldName) => {
   errors[fieldName] = '';
@@ -193,53 +185,61 @@ const handleLogin = async () => {
     return;
   }
 
-  isSubmitting.value = true;
-  try {
-    const payload = {
-      email: formData.email,
-      password: formData.password,
-    };
-    const response = await apiClient.post('/auth/login', payload);
+  const result = await authStore.login({
+    email: formData.email,
+    password: formData.password,
+  });
 
-    if (response.status === 200) {
-      const toast = await toastController.create({
-        message: '로그인에 성공했습니다!',
-        duration: 2000,
-        color: 'success',
-        position: 'top',
-      });
-      await toast.present();
-      
-      // 토큰 저장 및 메인 페이지로 이동
-      localStorage.setItem('token', response.data.token);
-      router.push('/');
-    }
-  } catch (error) {
-    console.error('로그인 실패:', error);
-    let errorMessage = '로그인 중 오류가 발생했습니다.';
-    if (error.response && error.response.data) {
-      if (typeof error.response.data === 'string') {
-        errorMessage = error.response.data;
-      } else if (error.response.data.message) {
-        errorMessage = error.response.data.message;
-      }
-    }
-
+  if (result.success) {
+    const toast = await toastController.create({
+      message: '로그인에 성공했습니다!',
+      duration: 2000,
+      color: 'success',
+      position: 'top',
+    });
+    await toast.present();
+    
+    // 메인 페이지로 이동
+    router.push('/');
+  } else {
     const alert = await alertController.create({
       header: '로그인 실패',
-      message: errorMessage,
+      message: result.error,
       buttons: ['확인'],
     });
     await alert.present();
-  } finally {
-    isSubmitting.value = false;
   }
 };
 
-const handleSocialLogin = (provider) => {
-  // TODO: 소셜 로그인 구현
+const handleSocialLogin = async (provider) => {
   console.log(`${provider} 로그인 시도`);
-  // 실제로는 OAuth2 URL로 리다이렉트 또는 팝업 창 열기
+  
+  // 개발 환경에서 OAuth2 클라이언트 설정 확인
+  const alert = await alertController.create({
+    header: '소셜 로그인 준비 중',
+    message: `${provider} 로그인 기능은 현재 개발 환경에서 OAuth2 클라이언트 설정이 완료되지 않았습니다.\n\n실제 서비스에서는 각 소셜 서비스의 개발자 콘솔에서 클라이언트 ID와 시크릿을 발급받아 설정해야 합니다.\n\n지금은 이메일 로그인을 이용해주세요.`,
+    buttons: [
+      {
+        text: '확인',
+        role: 'confirm'
+      },
+      {
+        text: '이메일 로그인',
+        handler: () => {
+          // 이메일 입력 필드로 포커스 이동
+          const emailInput = document.querySelector('ion-input[name="email"]');
+          if (emailInput) {
+            emailInput.setFocus();
+          }
+        }
+      }
+    ]
+  });
+  await alert.present();
+  
+  // 실제 OAuth2 인증 URL로 리다이렉트 (주석 처리)
+  // const oauth2Url = `http://localhost:8081/oauth2/authorization/${provider}`;
+  // window.location.href = oauth2Url;
 };
 
 const goToSignUp = () => {
@@ -247,13 +247,11 @@ const goToSignUp = () => {
 };
 
 const goToFindEmail = () => {
-  // TODO: 이메일 찾기 페이지로 이동
-  console.log('이메일 찾기');
+  router.push('/auth/find-email');
 };
 
 const goToFindPassword = () => {
-  // TODO: 비밀번호 찾기 페이지로 이동
-  console.log('비밀번호 찾기');
+  router.push('/auth/find-password');
 };
 </script>
 
@@ -456,11 +454,6 @@ const goToFindPassword = () => {
   --background: black;
   --color: white;
   --border-color: black;
-}
-
-.email-button {
-  --border-color: #ff1744;
-  --color: #ff1744;
 }
 
 /* 반응형 디자인 */

@@ -40,7 +40,38 @@ const routes = [
       // hideTabs: true, // 필요시 App.vue에서 이 meta 정보를 활용하여 탭 숨김 처리
     },
   },
-  // TODO: 로그인 페이지 라우트 추가 예정 (/auth/login)
+  {
+    path: '/auth/login',
+    name: 'Login',
+    component: () => import('@/views/auth/LoginPage.vue'),
+    meta: {
+      // hideTabs: true, // 필요시 App.vue에서 이 meta 정보를 활용하여 탭 숨김 처리
+    },
+  },
+  {
+    path: '/auth/find-email',
+    name: 'FindEmail',
+    component: () => import('@/views/auth/FindEmailPage.vue'),
+    meta: {
+      // hideTabs: true, // 필요시 App.vue에서 이 meta 정보를 활용하여 탭 숨김 처리
+    },
+  },
+  {
+    path: '/auth/find-password',
+    name: 'FindPassword',
+    component: () => import('@/views/auth/FindPasswordPage.vue'),
+    meta: {
+      // hideTabs: true, // 필요시 App.vue에서 이 meta 정보를 활용하여 탭 숨김 처리
+    },
+  },
+  {
+    path: '/auth/reset-password',
+    name: 'ResetPassword',
+    component: () => import('@/views/auth/ResetPasswordPage.vue'),
+    meta: {
+      // hideTabs: true, // 필요시 App.vue에서 이 meta 정보를 활용하여 탭 숨김 처리
+    },
+  },
 ];
 
 const router = createRouter({

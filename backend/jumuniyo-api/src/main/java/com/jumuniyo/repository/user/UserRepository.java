@@ -5,6 +5,7 @@ import org.springframework.data.jpa.repository.JpaRepository; // Spring Data JPA
 // import org.springframework.stereotype.Repository; // 이 어노테이션은 Spring Data JPA에서는 보통 생략해도 됨.
 
 import java.util.Optional; // 데이터 조회 결과가 '있을 수도 있고 없을 수도 있을 때' 안전하게 처리하기 위한 자바 기능을 가져옴.
+import java.util.List; // 여러 결과를 담기 위한 리스트 기능을 가져옴.
 
 // public interface UserRepository extends JpaRepository<User, Long> 임.
 // 이 UserRepository는 JpaRepository 라는 미리 만들어진 '데이터 관리 기본 기능 목록'을 **상속받아서** 사용할 것임.
@@ -43,6 +44,29 @@ public interface UserRepository extends JpaRepository<User, Long> {
     // Spring Data JPA는 existsByNickname 이라는 메소드 이름을 보고 '아, User Entity에서 nickname 필드를 가지고 해당 데이터가 있는지 없는지만 빠르게 확인하라는 거구나!' 하고 알아서 쿼리를 만들어줌.
     // 결과는 true(있음) 또는 false(없음)로 알려줄 것임.
     boolean existsByNickname(String nickname);
+
+    // --- OAuth2 소셜 로그인 관련 쿼리 메소드 ---
+    
+    // OAuth2 제공자와 제공자 ID로 사용자를 찾아오는 기능
+    // 예: findByProviderAndProviderId("google", "123456789")
+    // SELECT * FROM users WHERE provider = 'google' AND provider_id = '123456789'
+    Optional<User> findByProviderAndProviderId(String provider, String providerId);
+
+    // OAuth2 제공자와 제공자 ID를 가진 사용자가 존재하는지 확인하는 기능
+    boolean existsByProviderAndProviderId(String provider, String providerId);
+
+    // --- 이메일 찾기/비밀번호 찾기 관련 쿼리 메소드 ---
+    
+    // 전화번호로 사용자를 찾아오는 기능 (이메일 찾기용)
+    // SELECT * FROM users WHERE phone_number = [전화번호]
+    Optional<User> findByPhoneNumber(String phoneNumber);
+    
+    // 닉네임과 전화번호로 사용자를 찾아오는 기능 (이메일 찾기용)
+    // SELECT * FROM users WHERE nickname = [닉네임] AND phone_number = [전화번호]
+    Optional<User> findByNicknameAndPhoneNumber(String nickname, String phoneNumber);
+    
+    // 전화번호를 가진 사용자가 존재하는지 확인하는 기능
+    boolean existsByPhoneNumber(String phoneNumber);
 
     // --- 필요하다면 @Query 어노테이션을 사용하여 더 복잡한 데이터베이스 조회 코드(쿼리)를 직접 작성할 수도 있음 ---
     // 아래는 예시 코드임. 지금은 몰라도 됨.

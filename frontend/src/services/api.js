@@ -2,13 +2,13 @@ import axios from 'axios';
 
 // Vite 환경 변수에서 API 기본 URL 가져오는 부분임.
 // .env.development 또는 .env.production 파일에 정의된 VITE_APP_API_BASE_URL 값을 사용함.
-// VITE_APP_API_BASE_URL=http://localhost:8080 처럼 .env 파일에 써둔 값을 가져옴.
-const API_BASE_URL = import.meta.env.VITE_APP_API_BASE_URL || 'http://localhost:8080'; // .env 파일에 값이 없으면 기본값으로 'http://localhost:8081'을 사용함.
+// VITE_APP_API_BASE_URL=http://localhost:8081 처럼 .env 파일에 써둔 값을 가져옴.
+const API_BASE_URL = import.meta.env.VITE_APP_API_BASE_URL || 'http://localhost:8081'; // .env 파일에 값이 없으면 기본값으로 'http://localhost:8081'을 사용함.
 
 // Axios 인스턴스 생성하는 부분임.
 // 이 인스턴스에 우리가 원하는 기본 설정들을 넣어둘 것임.
 const apiClient = axios.create({
-  baseURL: API_BASE_URL, // 앞으로 API 요청할 때 이 주소를 기본으로 사용할 것임.
+  baseURL: `${API_BASE_URL}/api/v1`, // API 요청 시 이 주소를 기본으로 사용할 것임.
   timeout: 10000, // 서버 응답을 10초(10000밀리초)까지 기다릴 것임.
   headers: { // 모든 요청에 기본적으로 포함될 정보들임.
     'Content-Type': 'application/json', // 보내는 데이터는 JSON 형식이라고 서버에 알려주는 것임.
@@ -23,10 +23,10 @@ const apiClient = axios.create({
 apiClient.interceptors.request.use(
   (config) => { // 요청 설정(config) 정보를 받아서
     // 요청 보내기 전에 할 작업들을 여기에 작성함 (예: 로그인 토큰 헤더에 추가).
-    // const token = localStorage.getItem('accessToken'); // 또는 Pinia 스토어에서 토큰 가져오는 예시임.
-    // if (token) {
-    //   config.headers['Authorization'] = `Bearer ${token}`; // 헤더에 토큰 추가하는 예시임.
-    // }
+    const token = localStorage.getItem('token'); // 로컬 스토리지에서 JWT 토큰 가져오기
+    if (token) {
+      config.headers['Authorization'] = `Bearer ${token}`; // 헤더에 토큰 추가하는 것
+    }
     console.log('Request Interceptor:', config); // 개발 중에 어떤 요청이 나가는지 확인용 로그임.
     return config; // 설정을 변경했으면 변경된 설정을 다시 반환해야 요청이 계속 진행됨.
   },
