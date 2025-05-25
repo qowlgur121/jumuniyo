@@ -25,14 +25,85 @@
           </div>
         </div>
 
-        <!-- 통계 카드들 -->
-        <div class="stats-section">
+        <!-- 가게가 없을 때 빈 상태 -->
+        <div v-if="stores.length === 0" class="empty-stores-state">
+          <div class="empty-icon">🏪</div>
+          <h2>등록된 가게가 없습니다</h2>
+          <p>먼저 가게를 등록하여 사업을 시작해보세요!</p>
+          <ion-button 
+            expand="block" 
+            @click="registerStore"
+            class="register-store-button"
+          >
+            가게 등록하기
+          </ion-button>
+        </div>
+
+        <!-- 가게는 있지만 선택되지 않았을 때 -->
+        <div v-if="stores.length > 0 && !selectedStoreId" class="select-store-state">
+          <div class="empty-icon">📊</div>
+          <h2>가게를 선택해주세요</h2>
+          <p>위에서 관리할 가게를 선택하면 대시보드가 표시됩니다.</p>
+        </div>
+
+        <!-- 가게 선택 섹션 -->
+        <div class="store-selection-section" v-if="stores.length > 0">
+          <div class="store-selector">
+            <h2>가게 선택</h2>
+            <div class="selector-row">
+              <ion-select
+                v-model="selectedStoreId"
+                placeholder="관리할 가게를 선택하세요"
+                interface="action-sheet"
+                @ionChange="onStoreChange"
+              >
+                <ion-select-option
+                  v-for="store in stores"
+                  :key="store.id"
+                  :value="store.id"
+                >
+                  {{ store.name }}
+                </ion-select-option>
+              </ion-select>
+              <ion-button 
+                fill="outline" 
+                @click="registerStore"
+                class="add-store-button"
+              >
+                <ion-icon :icon="addOutline" slot="start"></ion-icon>
+                가게 추가
+              </ion-button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 선택된 가게 정보 -->
+        <div v-if="selectedStore" class="selected-store-info">
+          <div class="store-header">
+            <h2>{{ selectedStore.name }} 대시보드</h2>
+            <p>{{ selectedStore.address }}</p>
+            <div class="store-actions">
+              <ion-button 
+                fill="outline" 
+                size="small"
+                @click="editStoreInfo"
+                class="edit-store-button"
+              >
+                <ion-icon :icon="pencilOutline" slot="start"></ion-icon>
+                가게 정보 수정
+              </ion-button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 통계 카드들 (선택된 가게 기준) -->
+        <div class="stats-section" v-if="selectedStore">
           <div class="stats-grid">
             <div class="stat-card">
               <div class="stat-icon">📊</div>
               <div class="stat-info">
-                <h3>오늘 주문</h3>
-                <p class="stat-number">{{ todayOrders }}</p>
+                <h3>{{ selectedStore.name }} 오늘 주문</h3>
+                <p class="stat-number">{{ selectedStoreStats.todayOrders }}</p>
                 <span class="stat-change positive">+12% 어제 대비</span>
               </div>
             </div>
@@ -40,8 +111,8 @@
             <div class="stat-card">
               <div class="stat-icon">💰</div>
               <div class="stat-info">
-                <h3>오늘 매출</h3>
-                <p class="stat-number">{{ formatCurrency(todaySales) }}</p>
+                <h3>{{ selectedStore.name }} 오늘 매출</h3>
+                <p class="stat-number">{{ formatCurrency(selectedStoreStats.todaySales) }}</p>
                 <span class="stat-change positive">+8% 어제 대비</span>
               </div>
             </div>
@@ -49,18 +120,18 @@
             <div class="stat-card">
               <div class="stat-icon">⭐</div>
               <div class="stat-info">
-                <h3>평점</h3>
-                <p class="stat-number">{{ averageRating }}</p>
-                <span class="stat-change neutral">리뷰 {{ reviewCount }}개</span>
+                <h3>{{ selectedStore.name }} 평점</h3>
+                <p class="stat-number">{{ selectedStoreStats.averageRating }}</p>
+                <span class="stat-change neutral">리뷰 {{ selectedStoreStats.reviewCount }}개</span>
               </div>
             </div>
 
             <div class="stat-card">
-              <div class="stat-icon">🏪</div>
+              <div class="stat-icon">🚚</div>
               <div class="stat-info">
-                <h3>내 가게</h3>
-                <p class="stat-number">{{ storeCount }}</p>
-                <span class="stat-change neutral">운영 중</span>
+                <h3>배달 중인 주문</h3>
+                <p class="stat-number">{{ selectedStoreStats.deliveringOrders }}</p>
+                <span class="stat-change neutral">실시간</span>
               </div>
             </div>
           </div>
@@ -77,10 +148,15 @@
               <div class="notification-badge" v-if="newOrdersCount > 0">{{ newOrdersCount }}</div>
             </div>
 
-            <div class="action-card" @click="goToStores">
+            <div 
+              class="action-card" 
+              :class="{ 'disabled': !selectedStoreId }"
+              @click="editStoreInfo"
+            >
               <div class="action-icon">🏪</div>
-              <h3>가게 관리</h3>
-              <p>메뉴와 가게 정보를 관리하세요</p>
+              <h3>가게 정보</h3>
+              <p v-if="selectedStoreId">{{ selectedStore?.name }} 정보를 수정하세요</p>
+              <p v-else>가게를 선택한 후 정보를 수정하세요</p>
             </div>
 
             <div class="action-card" @click="goToAnalytics">
@@ -148,12 +224,18 @@ import {
   IonButtons,
   IonButton,
   IonIcon,
+  IonSelect,
+  IonSelectOption,
   toastController
 } from '@ionic/vue';
 import {
   logOutOutline,
-  chevronForwardOutline
+  chevronForwardOutline,
+  addOutline,
+  pencilOutline
 } from 'ionicons/icons';
+// @ts-ignore
+import apiClient from '@/services/api';
 
 const router = useRouter();
 const authStore = useAuthStore();
@@ -161,7 +243,36 @@ const authStore = useAuthStore();
 // 사용자 정보
 const user = computed(() => authStore.user);
 
-// 대시보드 데이터 (실제로는 API에서 가져올 데이터)
+// 가게 관련 상태
+const stores = ref([]);
+const selectedStoreId = ref(null);
+const selectedStore = computed(() => {
+  return stores.value.find(store => store.id === selectedStoreId.value);
+});
+
+// 선택된 가게의 통계 데이터
+const selectedStoreStats = computed(() => {
+  if (!selectedStoreId.value) {
+    return {
+      todayOrders: 0,
+      todaySales: 0,
+      averageRating: 0,
+      reviewCount: 0,
+      deliveringOrders: 0
+    };
+  }
+  
+  // 실제로는 API에서 가져올 데이터 (가게별로)
+  return {
+    todayOrders: 15,
+    todaySales: 320000,
+    averageRating: 4.7,
+    reviewCount: 89,
+    deliveringOrders: 3
+  };
+});
+
+// 기존 전체 통계 데이터 (참고용)
 const todayOrders = ref(24);
 const todaySales = ref(480000);
 const averageRating = ref(4.8);
@@ -233,10 +344,6 @@ const goToOrders = () => {
   router.push('/owner/orders');
 };
 
-const goToStores = () => {
-  router.push('/owner/stores');
-};
-
 const goToAnalytics = () => {
   router.push('/owner/analytics');
 };
@@ -262,11 +369,72 @@ const logout = async () => {
   router.push('/owner/login');
 };
 
-// 컴포넌트 마운트 시 데이터 로드
-onMounted(() => {
-  // 실제로는 여기서 API 호출하여 대시보드 데이터를 가져옵니다
-  console.log('사장님 대시보드 로드 완료');
+// 컴포넌트 마운트 시 실행
+onMounted(async () => {
+  await loadStores();
+  // 가게가 하나만 있으면 자동 선택
+  if (stores.value.length === 1) {
+    selectedStoreId.value = stores.value[0].id;
+  }
 });
+
+// 가게 목록 로드
+const loadStores = async () => {
+  try {
+    const response = await apiClient.get('/stores/my');
+    stores.value = response.data.content || [];
+  } catch (error) {
+    console.error('가게 목록 로드 실패:', error);
+    showToast('가게 정보를 불러오는데 실패했습니다.', 'warning');
+  }
+};
+
+// 가게 선택 변경 시
+const onStoreChange = () => {
+  // 선택된 가게가 변경되면 해당 가게의 데이터를 로드
+  if (selectedStoreId.value) {
+    loadStoreStats();
+  }
+};
+
+// 선택된 가게의 통계 데이터 로드
+const loadStoreStats = async () => {
+  if (!selectedStoreId.value) return;
+  
+  try {
+    // 실제로는 API에서 가게별 통계를 가져올 예정
+    // const response = await apiClient.get(`/stores/${selectedStoreId.value}/stats`);
+    // 현재는 더미 데이터 사용
+  } catch (error) {
+    console.error('가게 통계 로드 실패:', error);
+    showToast('가게 통계를 불러오는데 실패했습니다.', 'warning');
+  }
+};
+
+// 토스트 메시지 표시
+const showToast = async (message, color = 'primary') => {
+  const toast = await toastController.create({
+    message,
+    duration: 3000,
+    color,
+    position: 'top'
+  });
+  await toast.present();
+};
+
+// 가게 등록 함수
+const registerStore = () => {
+  router.push('/store/register');
+};
+
+// 가게 정보 수정 함수
+const editStoreInfo = () => {
+  if (selectedStoreId.value) {
+    router.push(`/store/edit/${selectedStoreId.value}`);
+  } else {
+    showToast('수정할 가게를 먼저 선택해주세요.', 'warning');
+  }
+};
 </script>
 
 <style scoped>
@@ -418,6 +586,7 @@ onMounted(() => {
   font-size: 1.2rem;
   font-weight: 600;
   color: var(--ion-color-dark);
+  text-align: center;
 }
 
 .action-grid {
@@ -654,5 +823,123 @@ onMounted(() => {
     justify-content: space-between;
     align-items: center;
   }
+}
+
+/* 가게 선택 섹션 */
+.store-selection-section {
+  background: white;
+  border-radius: 16px;
+  padding: 24px;
+  margin-bottom: 24px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+}
+
+.store-selector h2 {
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: #1a1a1a;
+  margin: 0 0 16px 0;
+  text-align: center;
+}
+
+.selector-row {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+}
+
+.store-selector ion-select {
+  --background: #f8f9fa;
+  --border-radius: 12px;
+  --border-color: #e9ecef;
+  --padding-start: 16px;
+  --padding-end: 16px;
+  font-weight: 500;
+  flex: 1;
+}
+
+.add-store-button {
+  --border-radius: 12px;
+  --padding-start: 16px;
+  --padding-end: 16px;
+  flex-shrink: 0;
+}
+
+/* 선택된 가게 정보 */
+.selected-store-info {
+  background: linear-gradient(135deg, var(--ion-color-primary), var(--ion-color-secondary));
+  border-radius: 16px;
+  padding: 24px;
+  margin-bottom: 24px;
+  color: white;
+  text-align: center;
+}
+
+.store-header h2 {
+  font-size: 1.8rem;
+  font-weight: 700;
+  margin: 0 0 8px 0;
+}
+
+.store-header p {
+  font-size: 1rem;
+  opacity: 0.9;
+  margin: 0 0 16px 0;
+}
+
+.store-actions {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+}
+
+.edit-store-button {
+  --background: rgba(255, 255, 255, 0.2);
+  --background-activated: rgba(255, 255, 255, 0.3);
+  --background-hover: rgba(255, 255, 255, 0.25);
+  --color: white;
+  --border-color: rgba(255, 255, 255, 0.3);
+  --border-radius: 12px;
+}
+
+/* 빈 상태 공통 스타일 */
+.empty-stores-state,
+.select-store-state {
+  padding: 2rem;
+  text-align: center;
+  color: var(--ion-color-medium);
+}
+
+.empty-icon {
+  font-size: 4rem;
+  margin-bottom: 1rem;
+}
+
+.register-store-button {
+  --background: var(--ion-color-primary);
+  --background-activated: var(--ion-color-primary-shade);
+  --background-hover: var(--ion-color-primary-tint);
+  --color: white;
+  --color-activated: white;
+  --color-hover: white;
+  --border-radius: 12px;
+  --border-width: 0;
+  --padding-top: 12px;
+  --padding-bottom: 12px;
+  --padding-start: 24px;
+  --padding-end: 24px;
+  font-weight: 600;
+}
+
+/* 액션 카드 비활성화 스타일 */
+.action-card.disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.action-card.disabled:hover {
+  transform: none;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
 }
 </style> 

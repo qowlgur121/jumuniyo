@@ -3,7 +3,7 @@
     <ion-header>
       <ion-toolbar>
         <ion-buttons slot="start">
-          <ion-back-button default-href="/"></ion-back-button>
+          <ion-back-button default-href="/owner/dashboard"></ion-back-button>
         </ion-buttons>
         <ion-title>음식점 관리</ion-title>
         <ion-buttons slot="end">
@@ -18,222 +18,189 @@
       <div class="responsive-container">
         <!-- 헤더 섹션 -->
         <div class="dashboard-header">
-          <h1 class="responsive-title">음식점 관리 대시보드</h1>
-          <p class="subtitle">음식점 운영에 필요한 모든 것을 한곳에서 관리하세요</p>
+          <h1 class="responsive-title">가게 관리</h1>
+          <p class="subtitle" v-if="selectedStore">{{ selectedStore.name }} 관리 대시보드</p>
+          <p class="subtitle" v-else>관리할 가게를 선택하세요</p>
         </div>
 
-        <!-- 음식점 선택 -->
-        <div class="form-section" v-if="stores.length > 1">
-          <ion-item class="store-selector">
-            <ion-select
-              v-model="selectedStoreId"
-              placeholder="음식점을 선택하세요"
-              interface="action-sheet"
-              @ionChange="onStoreChange"
-            >
-              <div slot="label">
-                <ion-icon :icon="storefront"></ion-icon>
-                관리할 음식점
-              </div>
-              <ion-select-option
-                v-for="store in stores"
-                :key="store.id"
-                :value="store.id"
-              >
-                {{ store.name }}
-              </ion-select-option>
-            </ion-select>
-          </ion-item>
-        </div>
-
-        <!-- 대시보드 메인 콘텐츠 -->
-        <div v-if="selectedStore" class="dashboard-main">
-          <!-- 음식점 기본 정보 카드 -->
-          <div class="management-card store-info-card">
-            <div class="card-header">
-              <div class="card-title">
-                <ion-icon :icon="restaurantOutline" class="card-icon"></ion-icon>
-                <h2>음식점 정보</h2>
-              </div>
-              <ion-button 
-                fill="clear" 
-                size="small" 
-                @click="editStoreInfo"
-                class="action-button"
-              >
-                <ion-icon :icon="pencilOutline"></ion-icon>
-              </ion-button>
+        <!-- 음식점 선택 카드 -->
+        <div class="store-selector-card" v-if="stores.length > 0">
+          <div class="selector-header">
+            <div class="selector-title">
+              <ion-icon :icon="storefront" class="selector-icon"></ion-icon>
+              <h2>가게 선택</h2>
             </div>
-            <div class="card-content">
-              <div class="store-summary">
-                <div class="store-name">{{ selectedStore.name }}</div>
-                <div class="store-details">
-                  <div class="detail-item">
-                    <ion-icon :icon="locationOutline"></ion-icon>
-                    <span>{{ selectedStore.address || '주소 미입력' }}</span>
-                  </div>
-                  <div class="detail-item">
-                    <ion-icon :icon="callOutline"></ion-icon>
-                    <span>{{ selectedStore.phoneNumber || '전화번호 미입력' }}</span>
-                  </div>
-                  <div class="detail-item">
-                    <ion-icon :icon="fastFoodOutline"></ion-icon>
-                    <span>{{ selectedStore.category || '카테고리 미설정' }}</span>
-                  </div>
-                  <div class="detail-item">
-                    <span class="status-badge" :class="getStatusClass(selectedStore.status)">
-                      {{ getStatusText(selectedStore.status) }}
-                    </span>
-                  </div>
+            <ion-button 
+              fill="outline" 
+              size="small"
+              @click="registerStore"
+            >
+              <ion-icon :icon="addOutline" slot="start"></ion-icon>
+              가게 추가
+            </ion-button>
+          </div>
+          
+          <div class="store-grid">
+            <div 
+              v-for="store in stores"
+              :key="store.id"
+              class="store-card"
+              :class="{ 'store-selected': selectedStoreId === store.id }"
+              @click="selectStore(store.id)"
+            >
+              <div class="store-card-header">
+                <div class="store-info">
+                  <h3 class="store-name">{{ store.name }}</h3>
+                  <p class="store-category">{{ getCategoryName(store.category) }}</p>
                 </div>
+                <div class="store-status">
+                  <span class="status-badge" :class="getStatusClass(store.status)">
+                    {{ getStatusText(store.status) }}
+                  </span>
+                </div>
+              </div>
+              
+              <div class="store-card-content">
+                <div class="store-detail">
+                  <ion-icon :icon="locationOutline" class="detail-icon"></ion-icon>
+                  <span class="detail-text">{{ store.address || '주소 미입력' }}</span>
+                </div>
+                <div class="store-detail">
+                  <ion-icon :icon="callOutline" class="detail-icon"></ion-icon>
+                  <span class="detail-text">{{ store.phoneNumber || '전화번호 미입력' }}</span>
+                </div>
+              </div>
+              
+              <div class="store-card-actions">
+                <ion-button 
+                  fill="clear" 
+                  size="small"
+                  @click.stop="selectAndEdit(store.id)"
+                >
+                  <ion-icon :icon="pencilOutline"></ion-icon>
+                </ion-button>
+                <ion-button 
+                  fill="clear" 
+                  size="small"
+                  @click.stop="viewStoreDetails(store.id)"
+                >
+                  <ion-icon :icon="eyeOutline"></ion-icon>
+                </ion-button>
               </div>
             </div>
           </div>
+        </div>
 
-          <!-- 운영시간 카드 -->
-          <div class="management-card operating-hours-card">
-            <div class="card-header">
-              <div class="card-title">
-                <ion-icon :icon="timeOutline" class="card-icon"></ion-icon>
-                <h2>운영시간</h2>
+        <!-- 선택된 가게 상세 정보 -->
+        <div v-if="selectedStore" class="selected-store-dashboard">
+          <!-- 가게 요약 정보 -->
+          <div class="store-summary-card">
+            <div class="summary-header">
+              <div class="store-main-info">
+                <h2 class="store-title">{{ selectedStore.name }}</h2>
+                <div class="store-meta">
+                  <span class="category-tag">{{ getCategoryName(selectedStore.category) }}</span>
+                  <span class="status-indicator" :class="getStatusClass(selectedStore.status)">
+                    {{ getStatusText(selectedStore.status) }}
+                  </span>
+                </div>
               </div>
-              <ion-button 
-                fill="clear" 
-                size="small" 
-                @click="manageOperatingHours"
-                class="action-button"
-              >
-                <ion-icon :icon="settingsOutline"></ion-icon>
-              </ion-button>
+              <div class="summary-actions">
+                <ion-button 
+                  fill="outline" 
+                  size="small"
+                  @click="editStoreInfo"
+                >
+                  <ion-icon :icon="pencilOutline" slot="start"></ion-icon>
+                  정보 수정
+                </ion-button>
+              </div>
             </div>
-            <div class="card-content">
-              <div class="hours-summary">
-                <div class="today-hours">
-                  <h3>오늘 ({{ getTodayName() }})</h3>
-                  <div class="hours-info">
-                    <span v-if="todayHours?.isOpen" class="open-status">
-                      <ion-icon :icon="checkmarkCircle" color="success"></ion-icon>
+            
+            <div class="summary-content">
+              <div class="info-grid">
+                <div class="info-item">
+                  <ion-icon :icon="locationOutline" class="info-icon"></ion-icon>
+                  <div class="info-content">
+                    <span class="info-label">주소</span>
+                    <span class="info-value">{{ selectedStore.address || '주소 미입력' }}</span>
+                  </div>
+                </div>
+                <div class="info-item">
+                  <ion-icon :icon="callOutline" class="info-icon"></ion-icon>
+                  <div class="info-content">
+                    <span class="info-label">전화번호</span>
+                    <span class="info-value">{{ selectedStore.phoneNumber || '전화번호 미입력' }}</span>
+                  </div>
+                </div>
+                <div class="info-item">
+                  <ion-icon :icon="timeOutline" class="info-icon"></ion-icon>
+                  <div class="info-content">
+                    <span class="info-label">오늘 운영시간</span>
+                    <span class="info-value" v-if="todayHours?.isOpen">
                       {{ todayHours.openTime }} - {{ todayHours.closeTime }}
                     </span>
-                    <span v-else class="closed-status">
-                      <ion-icon :icon="closeCircle" color="danger"></ion-icon>
-                      휴무일
-                    </span>
-                  </div>
-                  <div v-if="todayHours?.hasBreakTime" class="break-time">
-                    브레이크: {{ todayHours.breakStartTime }} - {{ todayHours.breakEndTime }}
+                    <span class="info-value closed" v-else>휴무일</span>
                   </div>
                 </div>
-                <div class="hours-stats">
-                  <div class="stat-item">
-                    <span class="stat-value">{{ operatingStats.openDays }}/7</span>
-                    <span class="stat-label">영업일</span>
-                  </div>
-                  <div class="stat-item">
-                    <span class="stat-value">{{ operatingStats.avgHours }}시간</span>
-                    <span class="stat-label">평균 영업</span>
+                <div class="info-item">
+                  <ion-icon :icon="mapOutline" class="info-icon"></ion-icon>
+                  <div class="info-content">
+                    <span class="info-label">배달지역</span>
+                    <span class="info-value">{{ deliveryAreas.length }}개 지역</span>
                   </div>
                 </div>
               </div>
             </div>
           </div>
 
-          <!-- 배달지역 카드 -->
-          <div class="management-card delivery-areas-card">
-            <div class="card-header">
-              <div class="card-title">
-                <ion-icon :icon="mapOutline" class="card-icon"></ion-icon>
-                <h2>배달지역</h2>
+          <!-- 관리 메뉴 -->
+          <div class="management-menu">
+            <h3 class="menu-title">가게 관리</h3>
+            <div class="menu-grid">
+              <div class="menu-item" @click="editStoreInfo">
+                <div class="menu-icon-wrapper">
+                  <ion-icon :icon="restaurantOutline" class="menu-icon"></ion-icon>
+                </div>
+                <div class="menu-content">
+                  <h4 class="menu-name">기본 정보</h4>
+                  <p class="menu-desc">가게 정보, 운영시간 수정</p>
+                </div>
+                <ion-icon :icon="chevronForwardOutline" class="menu-arrow"></ion-icon>
               </div>
-              <ion-button 
-                fill="clear" 
-                size="small" 
-                @click="manageDeliveryAreas"
-                class="action-button"
-              >
-                <ion-icon :icon="addOutline"></ion-icon>
-              </ion-button>
-            </div>
-            <div class="card-content">
-              <div class="delivery-summary">
-                <div class="areas-count">
-                  <h3>등록된 배달지역</h3>
-                  <div class="count-display">
-                    <span class="count-number">{{ deliveryAreas.length }}</span>
-                    <span class="count-label">개 지역</span>
-                  </div>
+              
+              <div class="menu-item" @click="manageDeliveryAreas">
+                <div class="menu-icon-wrapper">
+                  <ion-icon :icon="mapOutline" class="menu-icon"></ion-icon>
                 </div>
-                <div class="areas-stats" v-if="deliveryAreas.length > 0">
-                  <div class="stat-item">
-                    <span class="stat-value">{{ formatCurrency(deliveryStats.minFee) }}</span>
-                    <span class="stat-label">최소 배달비</span>
-                  </div>
-                  <div class="stat-item">
-                    <span class="stat-value">{{ formatCurrency(deliveryStats.maxFee) }}</span>
-                    <span class="stat-label">최고 배달비</span>
-                  </div>
-                  <div class="stat-item">
-                    <span class="stat-value">{{ deliveryStats.avgTime }}분</span>
-                    <span class="stat-label">평균 배달시간</span>
-                  </div>
+                <div class="menu-content">
+                  <h4 class="menu-name">배달지역 관리</h4>
+                  <p class="menu-desc">배달 가능 지역 설정</p>
                 </div>
-                <div v-if="deliveryAreas.length > 0" class="active-areas">
-                  <div 
-                    v-for="area in deliveryAreas.slice(0, 3)" 
-                    :key="area.id"
-                    class="area-chip"
-                    :class="{ 'area-inactive': !area.isActive }"
-                  >
-                    {{ area.areaName }}
-                  </div>
-                  <div v-if="deliveryAreas.length > 3" class="more-areas">
-                    +{{ deliveryAreas.length - 3 }}개 더
-                  </div>
-                </div>
+                <ion-icon :icon="chevronForwardOutline" class="menu-arrow"></ion-icon>
               </div>
-            </div>
-          </div>
-
-          <!-- 빠른 액션 버튼들 -->
-          <div class="quick-actions">
-            <h2 class="section-title">빠른 작업</h2>
-            <div class="action-grid">
-              <ion-button 
-                fill="outline" 
-                expand="block" 
-                @click="editStoreInfo"
-                class="quick-action-button"
-              >
-                <ion-icon :icon="pencilOutline" slot="start"></ion-icon>
-                정보 수정
-              </ion-button>
-              <ion-button 
-                fill="outline" 
-                expand="block" 
-                @click="manageOperatingHours"
-                class="quick-action-button"
-              >
-                <ion-icon :icon="timeOutline" slot="start"></ion-icon>
-                운영시간 관리
-              </ion-button>
-              <ion-button 
-                fill="outline" 
-                expand="block" 
-                @click="manageDeliveryAreas"
-                class="quick-action-button"
-              >
-                <ion-icon :icon="mapOutline" slot="start"></ion-icon>
-                배달지역 관리
-              </ion-button>
-              <ion-button 
-                fill="outline" 
-                expand="block" 
-                @click="viewMyStores"
-                class="quick-action-button"
-              >
-                <ion-icon :icon="listOutline" slot="start"></ion-icon>
-                전체 음식점
-              </ion-button>
+              
+              <div class="menu-item" @click="viewMyStores">
+                <div class="menu-icon-wrapper">
+                  <ion-icon :icon="listOutline" class="menu-icon"></ion-icon>
+                </div>
+                <div class="menu-content">
+                  <h4 class="menu-name">전체 가게 목록</h4>
+                  <p class="menu-desc">모든 가게 한눈에 보기</p>
+                </div>
+                <ion-icon :icon="chevronForwardOutline" class="menu-arrow"></ion-icon>
+              </div>
+              
+              <div class="menu-item" @click="registerStore">
+                <div class="menu-icon-wrapper">
+                  <ion-icon :icon="addCircleOutline" class="menu-icon"></ion-icon>
+                </div>
+                <div class="menu-content">
+                  <h4 class="menu-name">새 가게 등록</h4>
+                  <p class="menu-desc">새로운 가게 추가하기</p>
+                </div>
+                <ion-icon :icon="chevronForwardOutline" class="menu-arrow"></ion-icon>
+              </div>
             </div>
           </div>
         </div>
@@ -312,9 +279,12 @@ import {
   mapOutline,
   addOutline,
   addCircleOutline,
-  listOutline
+  listOutline,
+  eyeOutline,
+  chevronForwardOutline
 } from 'ionicons/icons'
-import axios from 'axios'
+// @ts-ignore
+import apiClient from '@/services/api'
 
 // 타입 정의
 interface Store {
@@ -356,10 +326,12 @@ const selectedStoreId = ref<number | null>(null)
 const stores = ref<Store[]>([])
 const operatingHours = ref<OperatingHour[]>([])
 const deliveryAreas = ref<DeliveryArea[]>([])
+const categories = ref<any[]>([])
 
 // 컴포넌트 마운트 시
 onMounted(async () => {
   await loadStores()
+  await loadCategories()
   if (stores.value.length === 1) {
     selectedStoreId.value = stores.value[0].id
     await loadDashboardData()
@@ -417,16 +389,47 @@ const deliveryStats = computed(() => {
   }
 })
 
-// 메소드들
+// 메소들
+const loadCategories = async () => {
+  try {
+    const response = await apiClient.get('/categories')
+    categories.value = response.data || []
+  } catch (error) {
+    console.error('카테고리 로드 실패:', error)
+  }
+}
+
+const getCategoryName = (categoryId: any) => {
+  const category = categories.value.find((cat: any) => cat.id === categoryId)
+  return category ? category.name : '카테고리 없음'
+}
+
 const loadStores = async () => {
   try {
     isLoading.value = true
-    // TODO: 실제 API 엔드포인트로 교체
-    const response = await axios.get('/api/v1/stores/my-stores')
-    stores.value = response.data || []
-  } catch (error) {
+    // 실제 API 엔드포인트로 수정
+    const response = await apiClient.get('/stores/my')
+    stores.value = response.data.content || response.data || []
+    console.log('로드된 가게 목록:', stores.value)
+    
+    // 가게가 없을 때 안내 메시지
+    if (stores.value.length === 0) {
+      showToastMessage('등록된 가게가 없습니다. 새로운 가게를 등록해보세요!')
+    }
+  } catch (error: any) {
     console.error('음식점 목록 로드 실패:', error)
-    showToastMessage('음식점 목록을 불러오는데 실패했습니다.')
+    
+    // 인증 오류인 경우
+    if (error.response?.status === 401) {
+      showToastMessage('로그인이 필요합니다. 다시 로그인해주세요.')
+      router.push('/owner/login')
+      return
+    }
+    
+    // 기타 오류
+    showToastMessage('음식점 목록을 불러오는데 실패했습니다. 새로고침을 시도해보세요.')
+    // 에러 발생 시 빈 배열로 설정
+    stores.value = []
   } finally {
     isLoading.value = false
   }
@@ -438,13 +441,23 @@ const loadDashboardData = async () => {
   try {
     isLoading.value = true
     
-    // 운영시간 정보 로드
-    const operatingHoursResponse = await axios.get(`/api/v1/stores/${selectedStoreId.value}/operating-hours`)
-    operatingHours.value = operatingHoursResponse.data || []
+    // 운영시간 정보 로드 (API 경로 수정)
+    try {
+      const operatingHoursResponse = await apiClient.get(`/stores/${selectedStoreId.value}/operating-hours`)
+      operatingHours.value = operatingHoursResponse.data || []
+    } catch (error) {
+      console.warn('운영시간 정보 로드 실패:', error)
+      operatingHours.value = []
+    }
     
-    // 배달지역 정보 로드
-    const deliveryAreasResponse = await axios.get(`/api/v1/stores/${selectedStoreId.value}/delivery-areas`)
-    deliveryAreas.value = deliveryAreasResponse.data || []
+    // 배달지역 정보 로드 (API 경로 수정)
+    try {
+      const deliveryAreasResponse = await apiClient.get(`/stores/${selectedStoreId.value}/delivery-areas`)
+      deliveryAreas.value = deliveryAreasResponse.data || []
+    } catch (error) {
+      console.warn('배달지역 정보 로드 실패:', error)
+      deliveryAreas.value = []
+    }
     
   } catch (error) {
     console.error('대시보드 데이터 로드 실패:', error)
@@ -499,7 +512,11 @@ const formatCurrency = (amount: number) => {
 
 // 내비게이션 메소드들
 const editStoreInfo = () => {
-  router.push('/store/register')
+  if (selectedStoreId.value) {
+    router.push(`/store/edit/${selectedStoreId.value}`)
+  } else {
+    showToastMessage('수정할 음식점을 선택해주세요.')
+  }
 }
 
 const manageOperatingHours = () => {
@@ -521,6 +538,19 @@ const registerStore = () => {
 const showToastMessage = (message: string) => {
   toastMessage.value = message
   showToast.value = true
+}
+
+const selectStore = (storeId: number) => {
+  selectedStoreId.value = storeId
+}
+
+const viewStoreDetails = (storeId: number) => {
+  router.push(`/store/details/${storeId}`)
+}
+
+const selectAndEdit = (storeId: number) => {
+  selectedStoreId.value = storeId
+  editStoreInfo()
 }
 </script>
 
@@ -899,5 +929,291 @@ const showToastMessage = (message: string) => {
   .quick-actions {
     grid-column: 1 / -1;
   }
+}
+
+/* 가게 선택 카드 스타일 */
+.store-selector-card {
+  background: white;
+  border-radius: 16px;
+  padding: 24px;
+  margin-bottom: 24px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+}
+
+.selector-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.selector-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.selector-title h2 {
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: #1a1a1a;
+  margin: 0;
+}
+
+.selector-icon {
+  font-size: 1.5rem;
+  color: #007bff;
+}
+
+.store-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 16px;
+}
+
+.store-card {
+  background: #f8f9fa;
+  border: 2px solid #e9ecef;
+  border-radius: 12px;
+  padding: 20px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.store-card:hover {
+  border-color: #007bff;
+  box-shadow: 0 4px 16px rgba(0, 123, 255, 0.15);
+  transform: translateY(-2px);
+}
+
+.store-selected {
+  border-color: #007bff !important;
+  background: #e7f3ff !important;
+  box-shadow: 0 4px 16px rgba(0, 123, 255, 0.2) !important;
+}
+
+.store-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 16px;
+}
+
+.store-name {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #1a1a1a;
+  margin: 0 0 4px 0;
+}
+
+.store-category {
+  font-size: 0.9rem;
+  color: #6c757d;
+  margin: 0;
+}
+
+.store-card-content {
+  margin-bottom: 16px;
+}
+
+.store-detail {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+  font-size: 0.9rem;
+  color: #495057;
+}
+
+.detail-icon {
+  font-size: 1rem;
+  color: #007bff;
+  flex-shrink: 0;
+}
+
+.detail-text {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.store-card-actions {
+  display: flex;
+  gap: 8px;
+  position: absolute;
+  top: 16px;
+  right: 16px;
+}
+
+/* 선택된 가게 대시보드 스타일 */
+.selected-store-dashboard {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.store-summary-card {
+  background: white;
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+}
+
+.summary-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 24px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid #e9ecef;
+}
+
+.store-title {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: #1a1a1a;
+  margin: 0 0 12px 0;
+}
+
+.store-meta {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.category-tag {
+  background: #e7f3ff;
+  color: #007bff;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.status-indicator {
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.info-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 20px;
+}
+
+.info-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.info-icon {
+  font-size: 1.2rem;
+  color: #007bff;
+  margin-top: 2px;
+  flex-shrink: 0;
+}
+
+.info-content {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.info-label {
+  font-size: 0.9rem;
+  color: #6c757d;
+  font-weight: 500;
+}
+
+.info-value {
+  font-size: 1rem;
+  color: #1a1a1a;
+  font-weight: 600;
+}
+
+.info-value.closed {
+  color: #dc3545;
+}
+
+/* 관리 메뉴 스타일 */
+.management-menu {
+  background: white;
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+}
+
+.menu-title {
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: #1a1a1a;
+  margin: 0 0 20px 0;
+}
+
+.menu-grid {
+  display: grid;
+  gap: 12px;
+}
+
+.menu-item {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px;
+  background: #f8f9fa;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border: 1px solid #e9ecef;
+}
+
+.menu-item:hover {
+  background: #e7f3ff;
+  border-color: #007bff;
+  transform: translateX(4px);
+}
+
+.menu-icon-wrapper {
+  width: 48px;
+  height: 48px;
+  background: #007bff;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.menu-icon {
+  font-size: 1.5rem;
+  color: white;
+}
+
+.menu-content {
+  flex: 1;
+}
+
+.menu-name {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #1a1a1a;
+  margin: 0 0 4px 0;
+}
+
+.menu-desc {
+  font-size: 0.9rem;
+  color: #6c757d;
+  margin: 0;
+}
+
+.menu-arrow {
+  font-size: 1.2rem;
+  color: #adb5bd;
+  flex-shrink: 0;
 }
 </style> 

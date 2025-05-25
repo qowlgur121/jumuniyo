@@ -90,6 +90,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/v1/auth/reset-password/validate").permitAll() // 토큰 검증 API
                         .requestMatchers("/api/v1/auth/change-password").permitAll()  // 비밀번호 변경 API
                         .requestMatchers("/api/v1/owner/signup").permitAll()          // 사장님 회원가입 API
+                        .requestMatchers("/api/v1/categories/**").permitAll()         // 카테고리 API (공개)
                         .requestMatchers("/oauth2/**").permitAll()                    // OAuth2 관련 모든 경로
                         .requestMatchers("/actuator/**").permitAll()                  // Actuator 엔드포인트
                         .requestMatchers("/swagger-ui/**").permitAll()                // Swagger UI

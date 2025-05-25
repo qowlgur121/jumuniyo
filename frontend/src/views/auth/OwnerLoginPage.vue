@@ -6,6 +6,12 @@
           <ion-back-button default-href="/auth/login"></ion-back-button>
         </ion-buttons>
         <ion-title>사장님 로그인</ion-title>
+        <ion-buttons slot="end" v-if="isDevelopment">
+          <ion-button fill="clear" @click="autoLogin">
+            <ion-icon :icon="flashOutline"></ion-icon>
+            자동 로그인
+          </ion-button>
+        </ion-buttons>
       </ion-toolbar>
     </ion-header>
 
@@ -117,8 +123,10 @@ import {
   IonInput,
   IonButton,
   IonSpinner,
+  IonIcon,
   toastController
 } from '@ionic/vue';
+import { flashOutline } from 'ionicons/icons';
 import apiClient from '@/services/api.js';
 
 const router = useRouter();
@@ -126,6 +134,7 @@ const authStore = useAuthStore();
 
 // 상태 관리
 const isLoading = ref(false);
+const isDevelopment = ref(import.meta.env.DEV);
 
 // 폼 데이터
 const formData = reactive({
@@ -247,6 +256,13 @@ const goToOwnerSignUp = () => {
 
 const goToCustomerLogin = () => {
   router.push('/auth/login');
+};
+
+// 자동 로그인 (개발용)
+const autoLogin = () => {
+  formData.email = 'qowlgur121@gmail.com';
+  formData.password = 'test123!';
+  showToast('자동 로그인 정보가 입력되었습니다! 🚀', 'success');
 };
 
 // 토스트 메시지 표시

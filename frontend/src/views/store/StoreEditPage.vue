@@ -3,28 +3,22 @@
     <ion-header>
       <ion-toolbar>
         <ion-buttons slot="start">
-          <ion-back-button default-href="/owner/dashboard"></ion-back-button>
+          <ion-back-button default-href="/store/dashboard"></ion-back-button>
         </ion-buttons>
-        <ion-title>음식점 등록</ion-title>
-        <ion-buttons slot="end" v-if="isDevelopment">
-          <ion-button fill="clear" @click="fillDummyData">
-            <ion-icon :icon="flashOutline"></ion-icon>
-            더미 데이터
-          </ion-button>
-        </ion-buttons>
+        <ion-title>음식점 정보 수정</ion-title>
       </ion-toolbar>
     </ion-header>
 
-    <ion-content class="store-registration-content">
-      <div class="responsive-container">
+    <ion-content class="store-edit-content">
+      <div class="responsive-container" v-if="!isLoading">
         <!-- 헤더 섹션 -->
-        <div class="registration-header">
-          <h1 class="responsive-title">새로운 음식점을 등록하세요</h1>
-          <p class="subtitle">주문이요와 함께 더 많은 고객을 만나보세요!</p>
+        <div class="edit-header">
+          <h1 class="responsive-title">{{ formData.name }} 정보 수정</h1>
+          <p class="subtitle">음식점 정보를 최신 상태로 유지하세요</p>
         </div>
 
-        <!-- 등록 폼 -->
-        <form @submit.prevent="submitForm" class="registration-form">
+        <!-- 수정 폼 -->
+        <form @submit.prevent="submitForm" class="edit-form">
           <!-- 기본 정보 섹션 -->
           <div class="form-section">
             <h2 class="section-title">기본 정보</h2>
@@ -95,20 +89,10 @@
                 size="small"
                 @click="searchAddress"
               >
-                주소 검색
+                주소 변경
               </ion-button>
             </ion-item>
             <div v-if="errors.address" class="error-message">{{ errors.address }}</div>
-
-            <!-- 상세주소 -->
-            <ion-item class="form-item" v-if="formData.address">
-              <ion-input
-                v-model="formData.detailAddress"
-                placeholder="상세주소를 입력하세요 (동, 호수 등)"
-              >
-                <div slot="label">상세주소</div>
-              </ion-input>
-            </ion-item>
 
             <!-- 전화번호 -->
             <ion-item class="form-item">
@@ -361,13 +345,19 @@
               expand="block"
               size="large"
               class="submit-button"
-              :disabled="isLoading || !isFormValid"
+              :disabled="isSubmitting || !isFormValid"
             >
-              <ion-spinner v-if="isLoading" name="crescent"></ion-spinner>
-              <span v-else>음식점 등록하기</span>
+              <ion-spinner v-if="isSubmitting" name="crescent"></ion-spinner>
+              <span v-else>정보 수정하기</span>
             </ion-button>
           </div>
         </form>
+      </div>
+
+      <!-- 로딩 상태 -->
+      <div v-else class="loading-container">
+        <ion-spinner name="crescent"></ion-spinner>
+        <p>음식점 정보를 불러오는 중...</p>
       </div>
     </ion-content>
   </ion-page>
@@ -375,38 +365,24 @@
 
 <script setup>
 import { ref, reactive, computed, onMounted } from 'vue';
-import { useRouter } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 import {
-  IonPage,
-  IonHeader,
-  IonToolbar,
-  IonTitle,
-  IonContent,
-  IonButtons,
-  IonBackButton,
-  IonItem,
-  IonInput,
-  IonTextarea,
-  IonSelect,
-  IonSelectOption,
-  IonButton,
-  IonSpinner,
-  IonCheckbox,
-  IonDatetime,
-  IonLabel,
-  IonIcon,
-  toastController,
-  alertController
+  IonPage, IonHeader, IonToolbar, IonTitle, IonContent, IonButtons, IonBackButton,
+  IonItem, IonInput, IonTextarea, IonSelect, IonSelectOption, IonButton,
+  IonCheckbox, IonDatetime, IonSpinner, IonLabel, IonIcon, alertController, toastController
 } from '@ionic/vue';
-import { categoryApi, storeApi } from '@/services/storeApi.js';
-import { addOutline, trashOutline, flashOutline } from 'ionicons/icons';
+// @ts-ignore
+import apiClient from '@/services/api';
+import { addOutline, trashOutline } from 'ionicons/icons';
 
+const route = useRoute();
 const router = useRouter();
 
 // 상태 관리
-const isLoading = ref(false);
+const isLoading = ref(true);
+const isSubmitting = ref(false);
 const categories = ref([]);
-const isDevelopment = ref(import.meta.env.DEV);
+const storeId = route.params.id;
 
 // 요일 데이터
 const daysOfWeek = [
@@ -424,14 +400,12 @@ const formData = reactive({
   name: '',
   description: '',
   address: '',
-  detailAddress: '',
   phoneNumber: '',
   businessNumber: '',
   logoImageUrl: '',
   minimumOrderAmount: 0,
   deliveryFee: 0,
   categoryId: null,
-  deliveryAreas: [],
   operatingHours: {
     'mon': { isOpen: true, openTime: '09:00', closeTime: '21:00' },
     'tue': { isOpen: true, openTime: '09:00', closeTime: '21:00' },
@@ -440,38 +414,45 @@ const formData = reactive({
     'fri': { isOpen: true, openTime: '09:00', closeTime: '21:00' },
     'sat': { isOpen: true, openTime: '09:00', closeTime: '21:00' },
     'sun': { isOpen: true, openTime: '09:00', closeTime: '21:00' }
-  }
+  },
+  deliveryAreas: []
 });
 
 // 에러 상태
 const errors = reactive({
   name: '',
+  categoryId: '',
   address: '',
   phoneNumber: '',
   businessNumber: '',
   minimumOrderAmount: '',
-  deliveryFee: '',
-  categoryId: ''
+  deliveryFee: ''
 });
 
-// 폼 유효성 체크
+// 폼 유효성 검증
 const isFormValid = computed(() => {
   return formData.name && 
+         formData.categoryId && 
          formData.address && 
-         formData.businessNumber && 
-         formData.categoryId &&
+         formData.businessNumber &&
+         formData.minimumOrderAmount >= 0 &&
+         formData.deliveryFee >= 0 &&
          !Object.values(errors).some(error => error);
 });
 
-// 마운트 시 카테고리 목록 로드
+// 컴포넌트 마운트 시 데이터 로드
 onMounted(async () => {
-  await loadCategories();
+  await Promise.all([
+    loadCategories(),
+    loadStoreData()
+  ]);
+  isLoading.value = false;
 });
 
 // 카테고리 목록 로드
 const loadCategories = async () => {
   try {
-    const response = await categoryApi.getActiveCategories();
+    const response = await apiClient.get('/categories');
     categories.value = response.data;
   } catch (error) {
     console.error('카테고리 로드 실패:', error);
@@ -479,111 +460,83 @@ const loadCategories = async () => {
   }
 };
 
-// 필드별 유효성 검증
-const validateField = (fieldName) => {
-  errors[fieldName] = '';
+// 음식점 데이터 로드
+const loadStoreData = async () => {
+  try {
+    const response = await apiClient.get(`/stores/${storeId}`);
+    const store = response.data;
+    
+    // 폼 데이터에 기존 정보 설정
+    Object.assign(formData, {
+      name: store.name || '',
+      description: store.description || '',
+      address: store.address || '',
+      phoneNumber: store.phoneNumber || '',
+      businessNumber: store.businessNumber || '',
+      logoImageUrl: store.logoImageUrl || '',
+      minimumOrderAmount: store.minimumOrderAmount || 0,
+      deliveryFee: store.deliveryFee || 0,
+      categoryId: store.categoryId || null
+    });
 
-  switch (fieldName) {
-    case 'name':
-      if (!formData.name) {
-        errors.name = '가게명은 필수 입력 값입니다.';
-      } else if (formData.name.length > 100) {
-        errors.name = '가게명은 최대 100자까지 입력 가능합니다.';
-      }
-      break;
+    // 운영시간 정보 설정
+    if (store.operatingHours && store.operatingHours.length > 0) {
+      store.operatingHours.forEach(hours => {
+        const day = hours.dayOfWeek.toLowerCase();
+        if (formData.operatingHours[day]) {
+          formData.operatingHours[day] = {
+            isOpen: hours.isOpen,
+            openTime: hours.openTime || '09:00',
+            closeTime: hours.closeTime || '21:00'
+          };
+        }
+      });
+    }
 
-    case 'address':
-      if (!formData.address) {
-        errors.address = '주소는 필수 입력 값입니다.';
-      } else if (formData.address.length > 255) {
-        errors.address = '주소는 최대 255자까지 입력 가능합니다.';
-      }
-      break;
-
-    case 'phoneNumber':
-      if (formData.phoneNumber && !/^\d{2,3}-\d{3,4}-\d{4}$/.test(formData.phoneNumber)) {
-        errors.phoneNumber = '전화번호는 올바른 형식으로 입력해주세요. (예: 02-1234-5678)';
-      }
-      break;
-
-    case 'businessNumber':
-      if (!formData.businessNumber) {
-        errors.businessNumber = '사업자등록번호는 필수 입력 값입니다.';
-      } else if (!/^\d{3}-\d{2}-\d{5}$/.test(formData.businessNumber)) {
-        errors.businessNumber = '사업자등록번호는 올바른 형식으로 입력해주세요. (예: 123-45-67890)';
-      }
-      break;
-
-    case 'minimumOrderAmount':
-      if (formData.minimumOrderAmount < 0) {
-        errors.minimumOrderAmount = '최소주문금액은 0원 이상이어야 합니다.';
-      }
-      break;
-
-    case 'deliveryFee':
-      if (formData.deliveryFee < 0) {
-        errors.deliveryFee = '배달비는 0원 이상이어야 합니다.';
-      }
-      break;
-
-    case 'categoryId':
-      if (!formData.categoryId) {
-        errors.categoryId = '카테고리는 필수 선택 값입니다.';
-      }
-      break;
+    // 배달지역 정보 설정
+    if (store.deliveryAreas && store.deliveryAreas.length > 0) {
+      formData.deliveryAreas = store.deliveryAreas.map(area => ({
+        ...area,
+        isActive: area.isActive || true
+      }));
+    }
+  } catch (error) {
+    console.error('음식점 정보 로드 실패:', error);
+    showToast('음식점 정보를 불러오는데 실패했습니다.', 'danger');
+    router.push('/store/dashboard');
   }
 };
 
-// 폼 제출
-const submitForm = async () => {
-  // 모든 필드 유효성 검증
-  Object.keys(errors).forEach(field => validateField(field));
-
-  if (!isFormValid.value) {
-    showToast('입력 정보를 확인해주세요.', 'warning');
-    return;
-  }
-
-  isLoading.value = true;
-
-  try {
-    // 주소와 상세주소를 합쳐서 전송
-    const submitData = {
-      ...formData,
-      address: formData.detailAddress 
-        ? `${formData.address} ${formData.detailAddress}` 
-        : formData.address,
-      // 운영시간 데이터 포맷팅
-      operatingHours: Object.entries(formData.operatingHours).map(([day, hours]) => ({
-        dayOfWeek: day.toUpperCase(),
-        isOpen: hours.isOpen,
-        openTime: hours.isOpen ? hours.openTime : null,
-        closeTime: hours.isOpen ? hours.closeTime : null
-      }))
-    };
-    
-    const response = await storeApi.createStore(submitData);
-    
-    // 성공 알림
-    const alert = await alertController.create({
-      header: '등록 완료',
-      message: '음식점이 성공적으로 등록되었습니다!',
-      buttons: [
-        {
-          text: '확인',
-          handler: () => {
-            router.push('/store/dashboard');
-          }
-        }
-      ]
-    });
-    await alert.present();
-    
-  } catch (error) {
-    console.error('음식점 등록 실패:', error);
-    showToast('음식점 등록에 실패했습니다. 다시 시도해주세요.', 'danger');
-  } finally {
-    isLoading.value = false;
+// 유효성 검증 함수들
+const validateField = (field) => {
+  switch (field) {
+    case 'name':
+      errors.name = !formData.name ? '가게명을 입력해주세요.' : '';
+      break;
+    case 'categoryId':
+      errors.categoryId = !formData.categoryId ? '카테고리를 선택해주세요.' : '';
+      break;
+    case 'address':
+      errors.address = !formData.address ? '주소를 입력해주세요.' : '';
+      break;
+    case 'phoneNumber':
+      if (formData.phoneNumber) {
+        const phoneRegex = /^0\d{1,2}-\d{3,4}-\d{4}$/;
+        errors.phoneNumber = !phoneRegex.test(formData.phoneNumber) ? '올바른 전화번호 형식이 아닙니다.' : '';
+      } else {
+        errors.phoneNumber = '';
+      }
+      break;
+    case 'businessNumber':
+      const businessRegex = /^\d{3}-\d{2}-\d{5}$/;
+      errors.businessNumber = !businessRegex.test(formData.businessNumber) ? '올바른 사업자등록번호 형식이 아닙니다.' : '';
+      break;
+    case 'minimumOrderAmount':
+      errors.minimumOrderAmount = formData.minimumOrderAmount < 0 ? '최소주문금액은 0원 이상이어야 합니다.' : '';
+      break;
+    case 'deliveryFee':
+      errors.deliveryFee = formData.deliveryFee < 0 ? '배달비는 0원 이상이어야 합니다.' : '';
+      break;
   }
 };
 
@@ -593,14 +546,14 @@ const showToast = async (message, color = 'primary') => {
     message,
     duration: 3000,
     color,
-    position: 'top'
+    position: 'bottom'
   });
   await toast.present();
 };
 
-// 사업자등록번호 입력 시 자동으로 하이픈을 추가하는 함수
+// 사업자등록번호 자동 포맷팅
 const formatBusinessNumber = (event) => {
-  let value = event.target.value.replace(/[^0-9]/g, ''); // 숫자만 남기기
+  let value = event.target.value.replace(/[^0-9]/g, '');
   
   if (value.length <= 3) {
     formData.businessNumber = value;
@@ -610,27 +563,6 @@ const formatBusinessNumber = (event) => {
     formData.businessNumber = value.slice(0, 3) + '-' + value.slice(3, 5) + '-' + value.slice(5);
   } else {
     formData.businessNumber = value.slice(0, 3) + '-' + value.slice(3, 5) + '-' + value.slice(5, 10);
-  }
-};
-
-// 주소 검색 함수 (카카오 주소 API)
-const searchAddress = () => {
-  if (window.daum && window.daum.Postcode) {
-    new window.daum.Postcode({
-      oncomplete: function(data) {
-        // 선택된 주소 정보를 formData에 저장
-        formData.address = data.address;
-        // 상세주소 입력 필드에 포커스
-        setTimeout(() => {
-          const detailAddressInput = document.querySelector('ion-input[placeholder*="상세주소"]');
-          if (detailAddressInput) {
-            detailAddressInput.setFocus();
-          }
-        }, 100);
-      }
-    }).open();
-  } else {
-    showToast('주소 검색 서비스를 불러오는 중입니다. 잠시 후 다시 시도해주세요.', 'warning');
   }
 };
 
@@ -693,6 +625,20 @@ const formatPhoneNumber = (event) => {
   }
 };
 
+// 주소 검색 함수
+const searchAddress = () => {
+  if (window.daum && window.daum.Postcode) {
+    new window.daum.Postcode({
+      oncomplete: function(data) {
+        formData.address = data.address;
+        validateField('address');
+      }
+    }).open();
+  } else {
+    showToast('주소 검색 서비스를 불러올 수 없습니다.', 'warning');
+  }
+};
+
 // 운영시간 토글
 const onDayToggle = (day) => {
   formData.operatingHours[day].isOpen = !formData.operatingHours[day].isOpen;
@@ -702,8 +648,8 @@ const onDayToggle = (day) => {
 const addDeliveryArea = () => {
   formData.deliveryAreas.push({
     areaName: '',
-    deliveryFee: formData.deliveryFee || 0,
-    minimumOrderAmount: formData.minimumOrderAmount || 0,
+    deliveryFee: 0,
+    minimumOrderAmount: 0,
     estimatedDeliveryTime: 30,
     isActive: true
   });
@@ -714,71 +660,61 @@ const removeDeliveryArea = (index) => {
   formData.deliveryAreas.splice(index, 1);
 };
 
-// 더미 데이터 채우기
-const fillDummyData = () => {
-  // 기본 정보
-  formData.name = '맛있는 치킨집';
-  formData.description = '바삭하고 맛있는 치킨을 제공하는 전문점입니다. 신선한 재료와 특제 소스로 만든 치킨을 맛보세요!';
-  formData.address = '서울특별시 강남구 테헤란로 123';
-  formData.detailAddress = '456호';
-  formData.phoneNumber = '02-1234-5678';
-  formData.businessNumber = '123-45-67890';
-  formData.logoImageUrl = 'https://via.placeholder.com/300x200?text=치킨집+로고';
-  
-  // 배달 정보
-  formData.minimumOrderAmount = 15000;
-  formData.deliveryFee = 3000;
-  
-  // 카테고리 (치킨 카테고리가 있다면 자동 선택)
-  const chickenCategory = categories.value.find(cat => cat.name.includes('치킨'));
-  if (chickenCategory) {
-    formData.categoryId = chickenCategory.id;
-  } else if (categories.value.length > 0) {
-    formData.categoryId = categories.value[0].id;
+// 폼 제출
+const submitForm = async () => {
+  // 모든 필드 유효성 검증
+  Object.keys(errors).forEach(field => validateField(field));
+
+  if (!isFormValid.value) {
+    showToast('입력 정보를 확인해주세요.', 'warning');
+    return;
   }
-  
-  // 운영시간 (평일 11:00-22:00, 주말 12:00-23:00)
-  formData.operatingHours = {
-    'mon': { isOpen: true, openTime: '11:00', closeTime: '22:00' },
-    'tue': { isOpen: true, openTime: '11:00', closeTime: '22:00' },
-    'wed': { isOpen: true, openTime: '11:00', closeTime: '22:00' },
-    'thu': { isOpen: true, openTime: '11:00', closeTime: '22:00' },
-    'fri': { isOpen: true, openTime: '11:00', closeTime: '22:00' },
-    'sat': { isOpen: true, openTime: '12:00', closeTime: '23:00' },
-    'sun': { isOpen: true, openTime: '12:00', closeTime: '23:00' }
-  };
-  
-  // 배달지역 더미 데이터
-  formData.deliveryAreas = [
-    {
-      areaName: '강남구',
-      deliveryFee: 3000,
-      minimumOrderAmount: 15000,
-      estimatedDeliveryTime: 30,
-      isActive: true
-    },
-    {
-      areaName: '서초구',
-      deliveryFee: 3500,
-      minimumOrderAmount: 18000,
-      estimatedDeliveryTime: 35,
-      isActive: true
-    },
-    {
-      areaName: '송파구',
-      deliveryFee: 4000,
-      minimumOrderAmount: 20000,
-      estimatedDeliveryTime: 40,
-      isActive: true
-    }
-  ];
-  
-  showToast('더미 데이터가 입력되었습니다! 🚀', 'success');
+
+  isSubmitting.value = true;
+
+  try {
+    const submitData = {
+      ...formData,
+      operatingHours: Object.entries(formData.operatingHours).map(([day, hours]) => ({
+        dayOfWeek: day.toUpperCase(),
+        isOpen: hours.isOpen,
+        openTime: hours.isOpen ? hours.openTime : null,
+        closeTime: hours.isOpen ? hours.closeTime : null
+      })),
+      deliveryAreas: formData.deliveryAreas.map(area => ({
+        ...area,
+        isActive: area.isActive
+      }))
+    };
+    
+    await apiClient.put(`/stores/${storeId}`, submitData);
+    
+    // 성공 알림
+    const alert = await alertController.create({
+      header: '수정 완료',
+      message: '음식점 정보가 성공적으로 수정되었습니다!',
+      buttons: [
+        {
+          text: '확인',
+          handler: () => {
+            router.push('/store/dashboard');
+          }
+        }
+      ]
+    });
+    await alert.present();
+    
+  } catch (error) {
+    console.error('음식점 정보 수정 실패:', error);
+    showToast('음식점 정보 수정에 실패했습니다. 다시 시도해주세요.', 'danger');
+  } finally {
+    isSubmitting.value = false;
+  }
 };
 </script>
 
 <style scoped>
-.store-registration-content {
+.store-edit-content {
   --background: var(--ion-color-light);
 }
 
@@ -788,7 +724,7 @@ const fillDummyData = () => {
   padding: 20px;
 }
 
-.registration-header {
+.edit-header {
   text-align: center;
   margin-bottom: 30px;
   padding: 20px;
@@ -809,7 +745,7 @@ const fillDummyData = () => {
   margin: 0;
 }
 
-.registration-form {
+.edit-form {
   background: white;
   border-radius: 16px;
   padding: 24px;
@@ -998,6 +934,20 @@ const fillDummyData = () => {
   transform: none;
 }
 
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 50vh;
+  gap: 16px;
+}
+
+.loading-container p {
+  color: var(--ion-color-medium);
+  font-size: 1rem;
+}
+
 /* 반응형 디자인 */
 @media (max-width: 767px) {
   .responsive-container {
@@ -1008,7 +958,7 @@ const fillDummyData = () => {
     font-size: 1.5rem;
   }
   
-  .registration-form {
+  .edit-form {
     padding: 20px;
   }
   
@@ -1023,7 +973,7 @@ const fillDummyData = () => {
     justify-content: space-between;
   }
   
-  .time-picker {
+  .time-inputs {
     max-width: 140px;
   }
 }
@@ -1033,7 +983,7 @@ const fillDummyData = () => {
     padding: 32px;
   }
   
-  .registration-form {
+  .edit-form {
     padding: 32px;
   }
 }

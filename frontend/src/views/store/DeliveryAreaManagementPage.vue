@@ -412,8 +412,20 @@ const initKakaoMap = async () => {
   if (typeof window.kakao === 'undefined') {
     // 카카오맵 SDK 동적 로드
     const script = document.createElement('script')
-    script.src = '//dapi.kakao.com/v2/maps/sdk.js?appkey=YOUR_APP_KEY&libraries=services'
+    const apiKey = import.meta.env.VITE_KAKAO_MAP_API_KEY || 'YOUR_APP_KEY'
+    
+    if (apiKey === 'YOUR_APP_KEY') {
+      console.warn('카카오맵 API 키가 설정되지 않았습니다. .env 파일에 VITE_KAKAO_MAP_API_KEY를 설정해주세요.')
+      showToastMessage('카카오맵 API 키가 설정되지 않았습니다.')
+      return
+    }
+    
+    script.src = `//dapi.kakao.com/v2/maps/sdk.js?appkey=${apiKey}&libraries=services`
     script.onload = () => initMapAfterLoad()
+    script.onerror = () => {
+      console.error('카카오맵 SDK 로드에 실패했습니다.')
+      showToastMessage('지도를 불러올 수 없습니다.')
+    }
     document.head.appendChild(script)
   } else {
     initMapAfterLoad()
