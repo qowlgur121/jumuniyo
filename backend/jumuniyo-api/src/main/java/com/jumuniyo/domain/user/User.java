@@ -12,7 +12,10 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener; // �
 import java.time.LocalDateTime; // 날짜와 시간을 다루는 자바 기본 기능을 가져옴.
 
 @Entity // 이 클래스가 데이터베이스 테이블과 연결되는 '설계도(Entity)' 라는 것을 JPA에게 알려주는 것임.
-@Table(name = "users") // 이 설계도대로 만들 데이터베이스 테이블 이름을 "users" 라고 정하는 것임.
+@Table(name = "users",
+    uniqueConstraints = {
+        @UniqueConstraint(columnNames = {"email", "role"}, name = "uk_email_role")
+    }) // 이메일과 역할의 조합이 유니크하도록 설정 (같은 이메일로 다른 역할은 가능)
 @Getter // Lombok: 이 클래스 안에 있는 모든 정보(필드)들을 가져가는(Get) 메소드들을 자동으로 만들어줌.
 @NoArgsConstructor(access = AccessLevel.PROTECTED) // Lombok: 아무 파라미터도 없는 '기본 생성자'를 자동으로 만들어줌. JPA가 꼭 필요로 하는데, 외부에서 함부로 못 만들게 접근 권한은 Protected 로 하는 것이 좋음.
 @EntityListeners(AuditingEntityListener.class) // 이 Entity의 변화(만들어지거나 수정될 때)를 감지해서 특정 작업(예: 시간 기록)을 자동으로 해주는 기능을 연결하는 것임.
@@ -23,7 +26,7 @@ public class User {
     @Column(name = "user_id") // 데이터베이스 테이블에서는 이 필드 이름을 "user_id" 라는 컬럼 이름으로 쓰겠다고 정하는 것임. (안 적으면 보통 필드 이름 id 그대로 사용함)
     private Long id; // 사용자의 고유 번호 (숫자가 커질 수 있으니 Long 타입을 사용함)
 
-    @Column(nullable = false, unique = true, length = 100) // 데이터베이스 컬럼 설정임. '반드시 값이 있어야 함(nullable=false)', '다른 값과 중복되면 안 됨(unique=true)', '최대 100자까지 허용함(length=100)' 이라는 뜻임.
+    @Column(nullable = false, length = 100) // 유니크 제약 조건을 제거하고 복합 유니크 제약 조건을 사용
     private String email; // 사용자 이메일
 
     @Column(nullable = true) // OAuth2 로그인 사용자는 비밀번호가 없을 수 있으므로 nullable = true로 변경

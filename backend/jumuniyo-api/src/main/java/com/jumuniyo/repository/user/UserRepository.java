@@ -1,6 +1,7 @@
 package com.jumuniyo.repository.user; // UserRepository.java 파일이 위치한 폴더(패키지)를 나타내는 것임. 본인의 프로젝트 구조에 맞게 수정함.
 
 import com.jumuniyo.domain.user.User; // 우리가 만든 User Entity 설계도를 가져옴.
+import com.jumuniyo.domain.user.UserRole; // UserRole enum을 가져옴.
 import org.springframework.data.jpa.repository.JpaRepository; // Spring Data JPA가 제공하는 기본 데이터 관리 기능 목록(인터페이스)을 가져옴.
 // import org.springframework.stereotype.Repository; // 이 어노테이션은 Spring Data JPA에서는 보통 생략해도 됨.
 
@@ -72,4 +73,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
     // 아래는 예시 코드임. 지금은 몰라도 됨.
     // @Query("SELECT u FROM User u WHERE u.status = :status ORDER BY u.createdAt DESC") // 직접 데이터 조회 코드(JPQL 이라는 자바 객체용 쿼리 언어임)를 작성하는 것임.
     // List<User> findUsersByStatusOrderByCreatedAtDesc(@Param("status") UserStatus status); // 이 메소드 이름은 쿼리 메소드 규칙을 따르지 않아도 됨. @Query 어노테이션에 적힌 쿼리가 실행됨. @Param은 쿼리 안의 :status 부분과 메소드의 status 파라미터를 연결해주는 것임.
+
+    // 이메일과 역할로 사용자를 찾아오는 기능
+    Optional<User> findByEmailAndRole(String email, UserRole role);
 }

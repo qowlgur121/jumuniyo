@@ -3,17 +3,21 @@ package com.jumuniyo.service.user; // 본인의 패키지 경로에 맞게 수�
 import com.jumuniyo.domain.user.User;
 import com.jumuniyo.domain.user.UserRole;
 import com.jumuniyo.domain.user.UserStatus;
+import com.jumuniyo.domain.user.Owner;
 import com.jumuniyo.dto.user.UserSignUpRequestDto;
 import com.jumuniyo.dto.user.UserLoginRequestDto;
 import com.jumuniyo.dto.user.UserLoginResponseDto;
 import com.jumuniyo.dto.auth.OwnerSignUpRequestDto;
 import com.jumuniyo.dto.auth.OwnerSignUpResponseDto;
 import com.jumuniyo.repository.user.UserRepository;
+import com.jumuniyo.repository.user.OwnerRepository;
 import com.jumuniyo.security.JwtTokenProvider;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.Optional;
 
 @Service // 이 클래스가 비즈니스 로직을 처리하는 서비스 레이어 컴포넌트임을 나타냄
 @RequiredArgsConstructor // final 필드 또는 @NonNull 필드에 대한 생성자를 자동으로 생성 (의존성 주입)
@@ -22,11 +26,12 @@ import org.springframework.transaction.annotation.Transactional;
 public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository; // 생성자 주입
+    private final OwnerRepository ownerRepository; // 생성자 주입
     private final PasswordEncoder passwordEncoder; // 생성자 주입 (Spring Security 설정에서 빈으로 등록 예정)
     private final JwtTokenProvider jwtTokenProvider; // JWT 토큰 생성을 위한 의존성 주입
 
     @Override
-    @Transactional // 데이터 변경이 있으므로 트랜잭션 적용 (readOnly = false가 기본값)
+    @Transactional // 데이터 변경이 있으므로 트랜잭션 적용
     public void signUp(UserSignUpRequestDto requestDto) {
         // 1. 이메일 중복 검사
         if (userRepository.existsByEmail(requestDto.getEmail())) {
@@ -55,44 +60,71 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional // 데이터 변경이 있으므로 트랜잭션 적용
     public OwnerSignUpResponseDto ownerSignUp(OwnerSignUpRequestDto requestDto) {
-        // 1. 이메일 중복 검사
-        if (userRepository.existsByEmail(requestDto.getEmail())) {
-            throw new IllegalArgumentException("이미 가입된 이메일입니다: " + requestDto.getEmail());
+        // 1. 이미 같은 이메일로 사장님 계정이 있는지 확인
+        Optional<User> existingOwner = userRepository.findByEmailAndRole(requestDto.getEmail(), UserRole.ROLE_OWNER);
+        if (existingOwner.isPresent()) {
+            throw new IllegalArgumentException("이미 사장님 계정으로 가입된 이메일입니다: " + requestDto.getEmail());
         }
 
-        // 2. 닉네임 중복 검사
+        // 2. 닉네임 중복 검사 (전체 사용자 대상)
         if (userRepository.existsByNickname(requestDto.getNickname())) {
             throw new IllegalArgumentException("이미 사용 중인 닉네임입니다: " + requestDto.getNickname());
         }
 
-        // 3. 비밀번호 암호화
+        // 3. 사업자등록번호 중복 검사
+        if (ownerRepository.existsByBusinessNumber(requestDto.getBusinessNumber())) {
+            throw new IllegalArgumentException("이미 등록된 사업자등록번호입니다: " + requestDto.getBusinessNumber());
+        }
+
+        // 4. 같은 이메일의 일반회원이 있는지 확인하고 처리
+        Optional<User> existingCustomer = userRepository.findByEmailAndRole(requestDto.getEmail(), UserRole.ROLE_USER);
+        if (existingCustomer.isPresent()) {
+            // 이미 일반회원으로 가입된 이메일인 경우, 새로운 사장님 계정 생성을 허용
+            // 하지만 닉네임은 달라야 함 (이미 위에서 체크함)
+        }
+
+        // 5. 비밀번호 암호화
         String encodedPassword = passwordEncoder.encode(requestDto.getPassword());
 
-        // 4. 사장님 User 엔티티 생성
-        User owner = User.builder()
+        // 6. User 엔티티 생성 (기본 사용자 정보)
+        User user = User.builder()
                 .email(requestDto.getEmail())
                 .password(encodedPassword)
                 .nickname(requestDto.getNickname())
                 .phoneNumber(requestDto.getPhoneNumber())
                 .role(UserRole.ROLE_OWNER) // 사장님 역할 설정
-                .status(UserStatus.PENDING_APPROVAL) // 승인 대기 상태
+                .status(UserStatus.ACTIVE) // 일반 사용자는 활성 상태
                 .profileImageUrl(null)
                 .provider(null) // 일반 가입 (OAuth2 아님)
                 .providerId(null)
                 .build();
 
-        // 5. 사장님 계정 저장
-        User savedOwner = userRepository.save(owner);
+        // 7. User 저장
+        User savedUser = userRepository.save(user);
 
-        // 6. 응답 DTO 생성 및 반환
+        // 8. Owner 엔티티 생성 (사장님 전용 정보)
+        Owner owner = Owner.builder()
+                .user(savedUser)
+                .businessNumber(requestDto.getBusinessNumber())
+                .storeName(requestDto.getStoreName())
+                .storeAddress(requestDto.getStoreAddress())
+                .storeAddressDetail(requestDto.getStoreAddressDetail())
+                .storePhoneNumber(requestDto.getStorePhoneNumber())
+                .status(UserStatus.ACTIVE) // 테스트를 위해 바로 활성 상태로 설정
+                .build();
+
+        // 9. Owner 저장
+        Owner savedOwner = ownerRepository.save(owner);
+
+        // 10. 응답 DTO 생성 및 반환
         return OwnerSignUpResponseDto.of(
-                savedOwner.getId(),
-                savedOwner.getEmail(),
-                savedOwner.getNickname(),
-                savedOwner.getPhoneNumber(),
-                savedOwner.getRole(),
-                savedOwner.getStatus(),
-                savedOwner.getCreatedAt()
+                savedUser.getId(),
+                savedUser.getEmail(),
+                savedUser.getNickname(),
+                savedUser.getPhoneNumber(),
+                savedUser.getRole(),
+                savedOwner.getStatus(), // 사장님 승인 상태
+                savedUser.getCreatedAt()
         );
 
         // TODO: 사장님 승인 알림 메일 발송 로직 추가 예정
@@ -111,13 +143,23 @@ public class UserServiceImpl implements UserService {
             throw new IllegalArgumentException("비밀번호가 일치하지 않습니다.");
         }
 
-        // 3. 마지막 로그인 시간 업데이트
+        // 3. 사장님일 경우 Owner 테이블의 승인 상태 확인
+        if (user.getRole() == UserRole.ROLE_OWNER) {
+            Owner owner = ownerRepository.findByUser(user)
+                    .orElseThrow(() -> new IllegalArgumentException("사장님 정보를 찾을 수 없습니다."));
+            
+            if (owner.getStatus() == UserStatus.PENDING_APPROVAL) {
+                throw new IllegalArgumentException("아직 승인 대기 중인 계정입니다. 승인 후 이용해주세요.");
+            }
+        }
+
+        // 4. 마지막 로그인 시간 업데이트
         user.recordLastLogin();
 
-        // 4. JWT 토큰 생성
+        // 5. JWT 토큰 생성
         String token = jwtTokenProvider.createToken(user.getEmail(), user.getRole().name());
 
-        // 5. 응답 DTO 생성 및 반환
+        // 6. 응답 DTO 생성 및 반환
         return UserLoginResponseDto.of(token, user);
     }
 
