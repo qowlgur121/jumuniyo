@@ -36,7 +36,7 @@
         <div v-else-if="stores.length === 0" class="empty-state">
           <ion-icon name="storefront-outline" class="empty-icon"></ion-icon>
           <h2>등록된 음식점이 없습니다</h2>
-          <p>첫 번째 음식점을 등록하고 요기요와 함께 사업을 시작해보세요!</p>
+          <p>첫 번째 음식점을 등록하고 주문이요와 함께 사업을 시작해보세요!</p>
           <ion-button
             expand="block"
             size="large"

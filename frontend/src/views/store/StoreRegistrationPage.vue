@@ -14,7 +14,7 @@
         <!-- 헤더 섹션 -->
         <div class="registration-header">
           <h1 class="responsive-title">새로운 음식점을 등록하세요</h1>
-          <p class="subtitle">요기요와 함께 더 많은 고객을 만나보세요!</p>
+          <p class="subtitle">주문이요와 함께 더 많은 고객을 만나보세요!</p>
         </div>
 
         <!-- 등록 폼 -->

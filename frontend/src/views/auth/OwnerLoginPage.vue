@@ -15,7 +15,7 @@
         <div class="login-header">
           <div class="logo-section">
             <div class="logo">
-              <span class="logo-text">요기요</span>
+              <span class="logo-text">주문이요</span>
               <span class="owner-badge">사장님</span>
             </div>
             <h1 class="responsive-title">사장님 로그인</h1>
@@ -179,19 +179,29 @@ const handleLogin = async () => {
 
   try {
     const response = await apiClient.post('/auth/login', formData);
-    const { token, user } = response.data;
+    const { token, tokenType, userId, email, nickname, role, status, profileImageUrl } = response.data;
 
     // 사장님 역할 확인
-    if (user.role !== 'ROLE_OWNER') {
+    if (role !== 'ROLE_OWNER') {
       showToast('사장님 계정이 아닙니다. 사장님 전용 계정으로 로그인해주세요.', 'warning');
       return;
     }
 
     // 승인 상태 확인
-    if (user.status === 'PENDING_APPROVAL') {
+    if (status === 'PENDING_APPROVAL') {
       showToast('아직 승인 대기 중인 계정입니다. 승인 후 이용해주세요.', 'warning');
       return;
     }
+
+    // 사용자 객체 생성
+    const user = {
+      userId,
+      email,
+      nickname,
+      role,
+      status,
+      profileImageUrl
+    };
 
     // 토큰과 사용자 정보 저장
     localStorage.setItem('token', token);
@@ -257,7 +267,7 @@ const showToast = async (message, color = 'primary') => {
 }
 
 .login-header {
-  background: linear-gradient(135deg, var(--yogiyo-primary) 0%, #e91e63 100%);
+  background: linear-gradient(135deg, #ff1744 0%, #e91e63 100%);
   color: white;
   padding: 3rem 1rem 4rem;
   text-align: center;
@@ -295,12 +305,14 @@ const showToast = async (message, color = 'primary') => {
   margin: 0 0 0.5rem 0;
   font-size: 1.8rem;
   font-weight: 700;
+  color: white;
 }
 
 .subtitle {
   margin: 0;
   font-size: 1.1rem;
   opacity: 0.9;
+  color: white;
 }
 
 .login-form {
@@ -320,7 +332,7 @@ const showToast = async (message, color = 'primary') => {
 .form-item {
   margin-bottom: 1.5rem;
   --border-color: #e0e0e0;
-  --highlight-color: var(--yogiyo-primary);
+  --highlight-color: #ff1744;
 }
 
 .form-item:last-of-type {
@@ -328,14 +340,14 @@ const showToast = async (message, color = 'primary') => {
 }
 
 .error-message {
-  color: var(--ion-color-danger);
+  color: #dc3545;
   font-size: 0.875rem;
   margin: 0.25rem 0 0.5rem 1rem;
 }
 
 .login-button {
-  --background: var(--yogiyo-primary);
-  --background-hover: var(--yogiyo-primary-dark);
+  --background: #ff1744;
+  --background-hover: #d50000;
   --color: white;
   font-weight: 600;
   height: 56px;
@@ -343,7 +355,8 @@ const showToast = async (message, color = 'primary') => {
 }
 
 .login-button:disabled {
-  --background: var(--ion-color-medium);
+  --background: #cccccc;
+  --color: #666666;
 }
 
 .links-section {
@@ -358,7 +371,7 @@ const showToast = async (message, color = 'primary') => {
 }
 
 .link {
-  color: var(--yogiyo-primary);
+  color: #ff1744;
   cursor: pointer;
   font-weight: 500;
   font-size: 0.9rem;
@@ -366,10 +379,11 @@ const showToast = async (message, color = 'primary') => {
 
 .link:hover {
   text-decoration: underline;
+  color: #d50000;
 }
 
 .divider {
-  color: var(--ion-color-medium);
+  color: #666666;
   margin: 0 1rem;
 }
 
@@ -381,14 +395,14 @@ const showToast = async (message, color = 'primary') => {
 }
 
 .bottom-links p {
-  color: var(--ion-color-dark);
+  color: #333333;
   font-size: 1rem;
   margin-bottom: 1rem;
 }
 
 .signup-button {
-  --border-color: var(--yogiyo-primary);
-  --color: var(--yogiyo-primary);
+  --border-color: #ff1744;
+  --color: #ff1744;
   font-weight: 600;
   height: 48px;
   margin-bottom: 2rem;
@@ -396,13 +410,13 @@ const showToast = async (message, color = 'primary') => {
 
 .customer-link {
   padding-top: 1rem;
-  border-top: 1px solid var(--ion-color-light);
+  border-top: 1px solid #e0e0e0;
 }
 
 .customer-link p {
   margin: 0;
   font-size: 0.9rem;
-  color: var(--ion-color-medium);
+  color: #666666;
 }
 
 /* 반응형 디자인 */

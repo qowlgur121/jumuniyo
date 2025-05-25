@@ -19,15 +19,25 @@ export const useAuthStore = defineStore('auth', () => {
       const response = await apiClient.post('/auth/login', credentials);
       
       if (response.status === 200) {
-        const { token: authToken, userId, email, nickname, role } = response.data;
+        const { token: authToken, tokenType, userId, email, nickname, role, status, profileImageUrl } = response.data;
+        
+        // 사용자 객체 생성
+        const userData = { 
+          userId, 
+          email, 
+          nickname, 
+          role, 
+          status, 
+          profileImageUrl 
+        };
         
         // 상태 업데이트
         token.value = authToken;
-        user.value = { userId, email, nickname, role };
+        user.value = userData;
         
         // 로컬 스토리지에 저장
         localStorage.setItem('token', authToken);
-        localStorage.setItem('user', JSON.stringify({ userId, email, nickname, role }));
+        localStorage.setItem('user', JSON.stringify(userData));
         
         return { success: true };
       }
@@ -93,6 +103,16 @@ export const useAuthStore = defineStore('auth', () => {
     }
   };
 
+  const setUser = (userData) => {
+    user.value = userData;
+    localStorage.setItem('user', JSON.stringify(userData));
+  };
+
+  const setToken = (authToken) => {
+    token.value = authToken;
+    localStorage.setItem('token', authToken);
+  };
+
   return {
     // 상태
     token,
@@ -107,6 +127,8 @@ export const useAuthStore = defineStore('auth', () => {
     login,
     logout,
     signup,
-    initializeAuth
+    initializeAuth,
+    setUser,
+    setToken
   };
 }); 

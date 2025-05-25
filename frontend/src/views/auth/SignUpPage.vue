@@ -94,7 +94,8 @@
                 name="phoneNumber"
                 placeholder="전화번호 입력 (010-1234-5678)"
                 class="custom-input responsive-input"
-                @ionInput="validateField('phoneNumber')"
+                @ionInput="formatPhoneNumber"
+                @ionBlur="validateField('phoneNumber')"
                 :class="{ 'input-error': errors.phoneNumber }"
               ></ion-input>
               <ion-text color="danger" class="error-message responsive-small" v-if="errors.phoneNumber">
@@ -124,7 +125,7 @@
         <!-- 소셜 로그인 섹션 -->
         <div class="social-login-section spacing-lg">
           <div class="social-divider spacing-md">
-            <span class="divider-text responsive-small"></span>
+            <span class="divider-text responsive-small">또는</span>
           </div>
 
           <div class="social-buttons">
@@ -294,6 +295,26 @@ const goToLogin = () => {
 const handleSocialLogin = (provider) => {
   // 소셜 로그인 처리 로직을 구현해야 합니다.
   console.log(`Social login with ${provider}`);
+};
+
+const formatPhoneNumber = (event) => {
+  let value = event.target.value.replace(/[^0-9]/g, '');
+  
+  if (value.length <= 3) {
+    formData.phoneNumber = value;
+  } else if (value.length <= 7) {
+    if (value.startsWith('02')) {
+      formData.phoneNumber = value.slice(0, 2) + '-' + value.slice(2);
+    } else {
+      formData.phoneNumber = value.slice(0, 3) + '-' + value.slice(3);
+    }
+  } else {
+    if (value.startsWith('02')) {
+      formData.phoneNumber = value.slice(0, 2) + '-' + value.slice(2, 6) + '-' + value.slice(6, 10);
+    } else {
+      formData.phoneNumber = value.slice(0, 3) + '-' + value.slice(3, 7) + '-' + value.slice(7, 11);
+    }
+  }
 };
 </script>
 

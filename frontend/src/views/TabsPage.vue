@@ -7,17 +7,17 @@
           <ion-icon :icon="home"></ion-icon>
           <ion-label>홈</ion-label>
         </ion-tab-button>
-        
+
         <ion-tab-button tab="tab2" href="/tabs/tab2">
           <ion-icon :icon="receiptOutline"></ion-icon>
           <ion-label>주문내역</ion-label>
         </ion-tab-button>
-        
+
         <ion-tab-button tab="tab3" href="/tabs/tab3">
           <ion-icon :icon="heartOutline"></ion-icon>
           <ion-label>찜</ion-label>
         </ion-tab-button>
-        
+
         <ion-tab-button tab="tab4" href="/tabs/tab4">
           <ion-icon :icon="person"></ion-icon>
           <ion-label>마이</ion-label>
@@ -84,12 +84,12 @@ ion-tab-button ion-label {
 @media (max-width: 480px) {
   ion-tab-bar {
     height: 60px;
-  }
-  
+}
+
   ion-tab-button ion-icon {
     font-size: 20px;
-  }
-  
+}
+
   ion-tab-button ion-label {
     font-size: 10px;
   }
