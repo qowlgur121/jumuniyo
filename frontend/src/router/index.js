@@ -110,6 +110,12 @@ const routes = [
   },
   // 일반 고객 음식점 관련 (기존)
   {
+    path: '/store/dashboard',
+    name: 'StoreManagementDashboard',
+    component: () => import('@/views/store/StoreManagementDashboardPage.vue'),
+    meta: { requiresAuth: true } // 인증 필요
+  },
+  {
     path: '/store/register',
     name: 'StoreRegister',
     component: () => import('@/views/store/StoreRegistrationPage.vue'),
@@ -119,6 +125,18 @@ const routes = [
     path: '/store/my',
     name: 'MyStores',
     component: () => import('@/views/store/MyStoresPage.vue'),
+    meta: { requiresAuth: true } // 인증 필요
+  },
+  {
+    path: '/store/operating-hours',
+    name: 'OperatingHourManagement',
+    component: () => import('@/views/store/OperatingHourManagementPage.vue'),
+    meta: { requiresAuth: true } // 인증 필요
+  },
+  {
+    path: '/store/delivery-areas',
+    name: 'DeliveryAreaManagement',
+    component: () => import('@/views/store/DeliveryAreaManagementPage.vue'),
     meta: { requiresAuth: true } // 인증 필요
   },
 ];
