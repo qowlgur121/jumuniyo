@@ -17,7 +17,7 @@
         <div class="welcome-header">
           <div class="owner-info">
             <div class="logo">
-              <span class="logo-text">요기요</span>
+              <span class="logo-text">주문이요</span>
               <span class="owner-badge">사장님</span>
             </div>
             <h1 class="welcome-title">안녕하세요, {{ user?.nickname }}님!</h1>
@@ -271,11 +271,18 @@ onMounted(() => {
 
 <style scoped>
 .owner-dashboard-content {
-  --background: var(--ion-color-light);
+  --background: #f5f5f5;
+}
+
+/* 전체 컨테이너를 위한 최대 폭 설정 */
+.responsive-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  width: 100%;
 }
 
 .welcome-header {
-  background: linear-gradient(135deg, var(--yogiyo-primary) 0%, #e91e63 100%);
+  background: linear-gradient(135deg, #ff1744 0%, #e91e63 100%);
   color: white;
   padding: 2rem 1rem;
   text-align: center;
@@ -313,39 +320,57 @@ onMounted(() => {
   margin: 0 0 0.5rem 0;
   font-size: 1.5rem;
   font-weight: 700;
+  color: white;
 }
 
 .welcome-subtitle {
   margin: 0;
   font-size: 1rem;
   opacity: 0.9;
+  color: white;
 }
 
 .stats-section {
-  padding: 1.5rem 1rem;
+  padding: 1.5rem;
+  max-width: 100%;
 }
 
 .stats-grid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
   gap: 1rem;
+  max-width: 100%;
 }
 
 .stat-card {
   background: white;
-  border-radius: 12px;
+  border-radius: 16px;
   padding: 1.5rem;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
   display: flex;
   align-items: center;
   gap: 1rem;
+  min-height: 100px;
+  box-sizing: border-box;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
 }
 
 .stat-icon {
   font-size: 2rem;
-  background: var(--ion-color-light);
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
   padding: 0.75rem;
   border-radius: 12px;
+  width: 3.5rem;
+  height: 3.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
 }
 
 .stat-info h3 {
@@ -385,7 +410,7 @@ onMounted(() => {
 
 .quick-actions-section,
 .recent-orders-section {
-  padding: 0 1rem 1.5rem;
+  padding: 0 1.5rem 1.5rem;
 }
 
 .section-title {
@@ -397,23 +422,24 @@ onMounted(() => {
 
 .action-grid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
   gap: 1rem;
 }
 
 .action-card {
   background: white;
-  border-radius: 12px;
+  border-radius: 16px;
   padding: 1.5rem;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
   text-align: center;
   cursor: pointer;
-  transition: transform 0.2s ease;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
   position: relative;
 }
 
 .action-card:hover {
   transform: translateY(-2px);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
 }
 
 .action-icon {
@@ -437,9 +463,9 @@ onMounted(() => {
 
 .notification-badge {
   position: absolute;
-  top: 0.5rem;
-  right: 0.5rem;
-  background: var(--yogiyo-primary);
+  top: 0.75rem;
+  right: 0.75rem;
+  background: #ff1744;
   color: white;
   font-size: 0.7rem;
   font-weight: 600;
@@ -447,6 +473,7 @@ onMounted(() => {
   border-radius: 10px;
   min-width: 1.5rem;
   text-align: center;
+  box-shadow: 0 2px 8px rgba(255, 23, 68, 0.3);
 }
 
 .section-header {
@@ -458,16 +485,16 @@ onMounted(() => {
 
 .orders-list {
   background: white;
-  border-radius: 12px;
+  border-radius: 16px;
   overflow: hidden;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
 }
 
 .order-item {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 1rem;
+  padding: 1rem 1.5rem;
   border-bottom: 1px solid var(--ion-color-light);
   cursor: pointer;
   transition: background-color 0.2s ease;
@@ -505,7 +532,7 @@ onMounted(() => {
 
 .status-badge {
   display: inline-block;
-  padding: 0.25rem 0.75rem;
+  padding: 0.3rem 0.75rem;
   border-radius: 12px;
   font-size: 0.8rem;
   font-weight: 500;
@@ -550,14 +577,24 @@ onMounted(() => {
   color: var(--ion-color-medium);
 }
 
-/* 반응형 디자인 */
-@media (min-width: 768px) {
+/* 반응형 디자인 개선 */
+@media (min-width: 1200px) {
   .stats-grid {
     grid-template-columns: repeat(4, 1fr);
   }
   
   .action-grid {
     grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+@media (min-width: 768px) and (max-width: 1199px) {
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .action-grid {
+    grid-template-columns: repeat(2, 1fr);
   }
 }
 
@@ -574,15 +611,48 @@ onMounted(() => {
     font-size: 0.9rem;
   }
   
+  .stats-section {
+    padding: 1rem;
+  }
+  
+  .quick-actions-section,
+  .recent-orders-section {
+    padding: 0 1rem 1.5rem;
+  }
+  
+  .stats-grid {
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+  }
+  
+  .action-grid {
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+  }
+  
   .stat-card {
     padding: 1rem;
-    flex-direction: column;
-    text-align: center;
-    gap: 0.5rem;
+    flex-direction: row;
+    text-align: left;
   }
   
   .action-card {
     padding: 1rem;
+  }
+  
+  .order-item {
+    padding: 1rem;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+  
+  .order-status {
+    text-align: left;
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
   }
 }
 </style> 
