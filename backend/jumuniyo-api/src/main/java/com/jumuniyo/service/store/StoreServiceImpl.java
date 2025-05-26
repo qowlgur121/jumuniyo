@@ -138,7 +138,7 @@ public class StoreServiceImpl implements StoreService {
         User owner = userRepository.findByEmail(ownerEmail)
                 .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다: " + ownerEmail));
         
-        Page<Store> stores = storeRepository.findByOwner(owner, pageable);
+        Page<Store> stores = storeRepository.findByOwnerAndIsActiveTrue(owner, pageable);
         return stores.map(StoreResponseDto::fromSimple);
     }
 
@@ -348,5 +348,31 @@ public class StoreServiceImpl implements StoreService {
         // 실제 삭제가 아닌 비활성화
         store.deactivate();
         log.info("Store deactivated: {}", storeId);
+    }
+
+    @Override
+    @Transactional
+    public StoreResponseDto toggleStoreStatus(Long storeId, String ownerEmail) {
+        Store existingStore = getStore(storeId);
+        
+        // 사용자 조회
+        User owner = userRepository.findByEmail(ownerEmail)
+                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다: " + ownerEmail));
+        
+        // 소유자 권한 체크
+        if (!existingStore.isOwnedBy(owner)) {
+            throw new IllegalArgumentException("음식점 영업 상태를 변경할 권한이 없습니다.");
+        }
+        
+        // 영업 상태 토글
+        if (existingStore.getIsActive()) {
+            existingStore.deactivate();
+            log.info("Store deactivated: {}", storeId);
+        } else {
+            existingStore.activate();
+            log.info("Store activated: {}", storeId);
+        }
+        
+        return StoreResponseDto.from(existingStore);
     }
 } 

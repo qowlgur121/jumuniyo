@@ -84,12 +84,7 @@ const routes = [
     component: () => import('@/views/owner/OwnerDashboardPage.vue'),
     meta: { requiresAuth: true, requiresOwner: true }
   },
-  {
-    path: '/owner/stores',
-    name: 'OwnerStores',
-    component: () => import('@/views/owner/OwnerStoresPage.vue'),
-    meta: { requiresAuth: true, requiresOwner: true }
-  },
+
   {
     path: '/owner/orders',
     name: 'OwnerOrders',
@@ -121,18 +116,7 @@ const routes = [
     component: () => import('@/views/store/StoreEditPage.vue'),
     meta: { requiresAuth: true } // 인증 필요
   },
-  {
-    path: '/store/my',
-    name: 'MyStores',
-    component: () => import('@/views/store/MyStoresPage.vue'),
-    meta: { requiresAuth: true } // 인증 필요
-  },
-  {
-    path: '/store/operating-hours',
-    name: 'OperatingHourManagement',
-    component: () => import('@/views/store/OperatingHourManagementPage.vue'),
-    meta: { requiresAuth: true } // 인증 필요
-  },
+
 ];
 
 const router = createRouter({

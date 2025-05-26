@@ -122,4 +122,9 @@ public interface StoreService {
      * 사업자 등록번호 중복 체크 (수정 시)
      */
     boolean isBusinessNumberDuplicate(String businessNumber, Long excludeStoreId);
+
+    /**
+     * 음식점 영업 상태 토글
+     */
+    StoreResponseDto toggleStoreStatus(Long storeId, String ownerEmail);
 } 

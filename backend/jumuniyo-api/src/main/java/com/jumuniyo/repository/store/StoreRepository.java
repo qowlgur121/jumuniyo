@@ -27,6 +27,11 @@ public interface StoreRepository extends JpaRepository<Store, Long> {
     Page<Store> findByOwner(User owner, Pageable pageable);
 
     /**
+     * 사장님이 소유한 활성화된 음식점 조회 (페이징)
+     */
+    Page<Store> findByOwnerAndIsActiveTrue(User owner, Pageable pageable);
+
+    /**
      * 카테고리별 음식점 조회 (활성 상태만)
      */
     List<Store> findByCategoryAndIsActiveTrueAndIsApprovedTrue(Category category);

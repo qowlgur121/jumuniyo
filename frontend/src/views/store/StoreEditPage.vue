@@ -3,7 +3,7 @@
     <ion-header>
       <ion-toolbar>
         <ion-buttons slot="start">
-          <ion-back-button default-href="/store/dashboard"></ion-back-button>
+          <ion-back-button default-href="/owner/dashboard"></ion-back-button>
         </ion-buttons>
         <ion-title>음식점 정보 수정</ion-title>
       </ion-toolbar>
@@ -476,7 +476,7 @@ const loadStoreData = async () => {
       logoImageUrl: store.logoImageUrl || '',
       minimumOrderAmount: store.minimumOrderAmount || 0,
       deliveryFee: store.deliveryFee || 0,
-      categoryId: store.categoryId || null
+      categoryId: store.category?.id || store.categoryId || null
     });
 
     // 운영시간 정보 설정
@@ -503,7 +503,7 @@ const loadStoreData = async () => {
   } catch (error) {
     console.error('음식점 정보 로드 실패:', error);
     showToast('음식점 정보를 불러오는데 실패했습니다.', 'danger');
-    router.push('/store/dashboard');
+    router.push('/owner/dashboard');
   }
 };
 
@@ -697,7 +697,7 @@ const submitForm = async () => {
         {
           text: '확인',
           handler: () => {
-            router.push('/store/dashboard');
+            router.push('/owner/dashboard');
           }
         }
       ]
@@ -706,7 +706,24 @@ const submitForm = async () => {
     
   } catch (error) {
     console.error('음식점 정보 수정 실패:', error);
-    showToast('음식점 정보 수정에 실패했습니다. 다시 시도해주세요.', 'danger');
+    
+    let errorMessage = '음식점 정보 수정에 실패했습니다.';
+    
+    if (error.response?.data?.message) {
+      errorMessage = error.response.data.message;
+    } else if (error.response?.data?.error) {
+      errorMessage = error.response.data.error;
+    } else if (error.response?.status === 400) {
+      errorMessage = '입력 정보를 확인해주세요.';
+    } else if (error.response?.status === 403) {
+      errorMessage = '수정 권한이 없습니다.';
+    } else if (error.response?.status === 409) {
+      errorMessage = '이미 등록된 사업자등록번호입니다.';
+    } else if (error.response?.status === 500) {
+      errorMessage = '서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.';
+    }
+    
+    showToast(errorMessage, 'danger');
   } finally {
     isSubmitting.value = false;
   }

@@ -77,11 +77,19 @@
           </div>
         </div>
 
-        <!-- 선택된 가게 정보 -->
+                <!-- 선택된 가게 정보 -->
         <div v-if="selectedStore" class="selected-store-info">
           <div class="store-header">
-            <h2>{{ selectedStore.name }} 대시보드</h2>
-            <p>{{ selectedStore.address }}</p>
+            <div class="store-main-info">
+              <h2>{{ selectedStore.name }} 대시보드</h2>
+              <p>{{ selectedStore.address }}</p>
+              <div class="store-meta" v-if="getCategoryName(selectedStore.category) !== '카테고리 없음' || getStoreStatusText(selectedStore.status) !== '상태불명'">
+                <span class="category-tag" v-if="getCategoryName(selectedStore.category) !== '카테고리 없음'">{{ getCategoryName(selectedStore.category) }}</span>
+                <span class="status-indicator" v-if="getStoreStatusText(selectedStore.status) !== '상태불명'" :class="getStatusClass(selectedStore.status)">
+                  {{ getStoreStatusText(selectedStore.status) }}
+                </span>
+              </div>
+            </div>
             <div class="store-actions">
               <ion-button 
                 fill="outline" 
@@ -92,6 +100,40 @@
                 <ion-icon :icon="pencilOutline" slot="start"></ion-icon>
                 가게 정보 수정
               </ion-button>
+              <ion-button 
+                fill="clear" 
+                size="small"
+                color="danger"
+                @click="confirmDeleteStore"
+                class="delete-store-button"
+              >
+                <ion-icon :icon="trashOutline" slot="start"></ion-icon>
+                가게 삭제
+              </ion-button>
+            </div>
+          </div>
+          
+          <!-- 영업 상태 토글 섹션 -->
+          <div class="business-status-section">
+            <div class="status-toggle-container">
+              <div class="status-info">
+                <div class="status-icon-wrapper" 
+                     :class="selectedStore.isActive ? 'icon-wrapper-active' : 'icon-wrapper-inactive'">
+                  <ion-icon :icon="selectedStore.isActive ? checkmarkCircle : closeCircle" 
+                           :class="selectedStore.isActive ? 'status-icon-active' : 'status-icon-inactive'"></ion-icon>
+                </div>
+                <div class="status-text">
+                  <h3>{{ selectedStore.isActive ? '영업중' : '휴업중' }}</h3>
+                  <p>{{ selectedStore.isActive ? '고객이 주문할 수 있습니다' : '주문 접수가 중단됩니다' }}</p>
+                </div>
+              </div>
+              <ion-toggle
+                :checked="selectedStore.isActive"
+                @ionChange="toggleStoreStatus"
+                :disabled="isTogglingStatus"
+                class="status-toggle"
+                :color="selectedStore.isActive ? 'success' : 'medium'"
+              ></ion-toggle>
             </div>
           </div>
         </div>
@@ -226,13 +268,18 @@ import {
   IonIcon,
   IonSelect,
   IonSelectOption,
-  toastController
+  IonToggle,
+  toastController,
+  alertController
 } from '@ionic/vue';
 import {
   logOutOutline,
   chevronForwardOutline,
   addOutline,
-  pencilOutline
+  pencilOutline,
+  checkmarkCircle,
+  closeCircle,
+  trashOutline
 } from 'ionicons/icons';
 // @ts-ignore
 import apiClient from '@/services/api';
@@ -246,6 +293,8 @@ const user = computed(() => authStore.user);
 // 가게 관련 상태
 const stores = ref([]);
 const selectedStoreId = ref(null);
+const categories = ref([]);
+const isTogglingStatus = ref(false);
 const selectedStore = computed(() => {
   return stores.value.find(store => store.id === selectedStoreId.value);
 });
@@ -371,7 +420,10 @@ const logout = async () => {
 
 // 컴포넌트 마운트 시 실행
 onMounted(async () => {
-  await loadStores();
+  await Promise.all([
+    loadStores(),
+    loadCategories()
+  ]);
   // 가게가 하나만 있으면 자동 선택
   if (stores.value.length === 1) {
     selectedStoreId.value = stores.value[0].id;
@@ -433,6 +485,124 @@ const editStoreInfo = () => {
     router.push(`/store/edit/${selectedStoreId.value}`);
   } else {
     showToast('수정할 가게를 먼저 선택해주세요.', 'warning');
+  }
+};
+
+// 카테고리 이름 가져오기
+const getCategoryName = (categoryId) => {
+  const category = categories.value.find(cat => cat.id === categoryId);
+  return category ? category.name : '카테고리 없음';
+};
+
+// 상태 클래스 가져오기
+const getStatusClass = (status) => {
+  switch (status) {
+    case 'ACTIVE': return 'status-active';
+    case 'INACTIVE': return 'status-inactive';
+    case 'PENDING': return 'status-pending';
+    default: return 'status-unknown';
+  }
+};
+
+// 상태 텍스트 가져오기 (가게 상태용)
+const getStoreStatusText = (status) => {
+  switch (status) {
+    case 'ACTIVE': return '운영중';
+    case 'INACTIVE': return '휴업중';
+    case 'PENDING': return '승인대기';
+    default: return '상태불명';
+  }
+};
+
+// 영업 상태 토글
+const toggleStoreStatus = async () => {
+  if (!selectedStore.value) return;
+  
+  try {
+    isTogglingStatus.value = true;
+    const response = await apiClient.post(`/stores/${selectedStore.value.id}/toggle-status`);
+    
+    if (response.data.isActive !== undefined) {
+      selectedStore.value.isActive = response.data.isActive;
+      showToast(response.data.message || '영업 상태가 성공적으로 변경되었습니다.');
+    } else {
+      showToast('영업 상태 변경에 실패했습니다. 다시 시도해주세요.', 'warning');
+    }
+  } catch (error) {
+    console.error('영업 상태 변경 실패:', error);
+    showToast('영업 상태 변경에 실패했습니다. 다시 시도해주세요.', 'danger');
+  } finally {
+    isTogglingStatus.value = false;
+  }
+};
+
+// 가게 삭제 확인
+const confirmDeleteStore = async () => {
+  if (!selectedStore.value) return;
+  
+  const alert = await alertController.create({
+    header: '가게 삭제',
+    message: `정말로 "${selectedStore.value.name}" 가게를 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.`,
+    buttons: [
+      {
+        text: '취소',
+        role: 'cancel'
+      },
+      {
+        text: '삭제',
+        role: 'destructive',
+        handler: () => {
+          deleteStore();
+        }
+      }
+    ]
+  });
+  
+  await alert.present();
+};
+
+// 가게 삭제
+const deleteStore = async () => {
+  if (!selectedStore.value) return;
+  
+  try {
+    await apiClient.delete(`/stores/${selectedStore.value.id}`);
+    showToast('가게가 성공적으로 삭제되었습니다.');
+    
+    // 가게 목록에서 제거
+    stores.value = stores.value.filter(store => store.id !== selectedStore.value.id);
+    selectedStoreId.value = null;
+    
+    // 가게 목록 새로고침
+    await loadStores();
+  } catch (error) {
+    console.error('가게 삭제 실패:', error);
+    
+    let errorMessage = '가게 삭제에 실패했습니다.';
+    
+    if (error.response?.data?.message) {
+      errorMessage = error.response.data.message;
+    } else if (error.response?.data?.error) {
+      errorMessage = error.response.data.error;
+    } else if (error.response?.status === 403) {
+      errorMessage = '삭제 권한이 없습니다.';
+    } else if (error.response?.status === 404) {
+      errorMessage = '가게를 찾을 수 없습니다.';
+    } else if (error.response?.status === 500) {
+      errorMessage = '서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.';
+    }
+    
+    showToast(errorMessage, 'danger');
+  }
+};
+
+// 카테고리 목록 로드
+const loadCategories = async () => {
+  try {
+    const response = await apiClient.get('/categories');
+    categories.value = response.data || [];
+  } catch (error) {
+    console.error('카테고리 로드 실패:', error);
   }
 };
 </script>
@@ -867,39 +1037,172 @@ const editStoreInfo = () => {
 
 /* 선택된 가게 정보 */
 .selected-store-info {
-  background: linear-gradient(135deg, var(--ion-color-primary), var(--ion-color-secondary));
+  background: white;
   border-radius: 16px;
   padding: 24px;
   margin-bottom: 24px;
-  color: white;
-  text-align: center;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
 }
 
-.store-header h2 {
-  font-size: 1.8rem;
+.store-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 20px;
+}
+
+.store-main-info h2 {
+  font-size: 1.5rem;
   font-weight: 700;
+  color: #1a1a1a;
   margin: 0 0 8px 0;
 }
 
-.store-header p {
-  font-size: 1rem;
-  opacity: 0.9;
-  margin: 0 0 16px 0;
+.store-main-info p {
+  color: #666;
+  margin: 0 0 12px 0;
+}
+
+.store-meta {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.category-tag {
+  background: #e7f3ff;
+  color: #007bff;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.status-indicator {
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.status-active {
+  background: #d4edda;
+  color: #155724;
+}
+
+.status-inactive {
+  background: #f8d7da;
+  color: #721c24;
+}
+
+.status-pending {
+  background: #fff3cd;
+  color: #856404;
+}
+
+.status-unknown {
+  background: #e2e3e5;
+  color: #383d41;
 }
 
 .store-actions {
   display: flex;
-  justify-content: center;
-  gap: 12px;
+  gap: 8px;
+  flex-shrink: 0;
 }
 
 .edit-store-button {
-  --background: rgba(255, 255, 255, 0.2);
-  --background-activated: rgba(255, 255, 255, 0.3);
-  --background-hover: rgba(255, 255, 255, 0.25);
-  --color: white;
-  --border-color: rgba(255, 255, 255, 0.3);
   --border-radius: 12px;
+}
+
+.delete-store-button {
+  --color: #dc3545;
+  --border-radius: 12px;
+}
+
+/* 영업 상태 토글 스타일 */
+.business-status-section {
+  background: #f8f9fa;
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 20px;
+  border: 1px solid #e9ecef;
+}
+
+.status-toggle-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+}
+
+.status-info {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.status-icon-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  transition: background-color 0.3s ease;
+}
+
+.icon-wrapper-active {
+  background: rgba(40, 167, 69, 0.15);
+}
+
+.icon-wrapper-inactive {
+  background: rgba(220, 53, 69, 0.15);
+}
+
+.status-icon-active {
+  color: #28a745;
+  font-size: 1.8rem;
+}
+
+.status-icon-inactive {
+  color: #dc3545;
+  font-size: 1.8rem;
+}
+
+.status-text {
+  display: flex;
+  flex-direction: column;
+}
+
+.status-text h3 {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #1a1a1a;
+  margin: 0 0 4px 0;
+}
+
+.status-text p {
+  font-size: 1rem;
+  color: #6c757d;
+  margin: 0;
+}
+
+.status-toggle {
+  --background-checked: #28a745;
+  --background-unchecked: #dc3545;
+  --handle-background-checked: white;
+  --handle-background-unchecked: white;
+  --handle-border-radius: 50%;
+  --handle-border-width: 0;
+  --handle-height: 28px;
+  --handle-width: 28px;
+  --handle-box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  --handle-transform: none;
+  --handle-transition: transform 0.3s ease;
+  --border-radius: 22px;
+  --height: 36px;
+  --width: 64px;
 }
 
 /* 빈 상태 공통 스타일 */

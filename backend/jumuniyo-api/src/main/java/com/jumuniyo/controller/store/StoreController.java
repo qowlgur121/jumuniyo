@@ -159,4 +159,25 @@ public class StoreController {
         log.info("음식점 승인 거부 완료: ID={}", storeId);
         return ResponseEntity.ok(response);
     }
+
+    /**
+     * 음식점 영업 상태 토글
+     */
+    @PostMapping("/{storeId}/toggle-status")
+    public ResponseEntity<Map<String, Object>> toggleStoreStatus(@PathVariable Long storeId) {
+        log.info("음식점 영업 상태 토글 요청: ID={}", storeId);
+        
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String userEmail = authentication.getName();
+        
+        StoreResponseDto responseDto = storeService.toggleStoreStatus(storeId, userEmail);
+        
+        Map<String, Object> response = new HashMap<>();
+        response.put("message", "영업 상태가 변경되었습니다.");
+        response.put("isActive", responseDto.getIsActive());
+        response.put("status", responseDto.getIsActive() ? "영업중" : "휴업중");
+        
+        log.info("음식점 영업 상태 토글 완료: ID={}, 상태={}", storeId, responseDto.getIsActive());
+        return ResponseEntity.ok(response);
+    }
 } 

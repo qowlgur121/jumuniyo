@@ -572,7 +572,7 @@ const submitForm = async () => {
         {
           text: '확인',
           handler: () => {
-            router.push('/store/dashboard');
+            router.push('/owner/dashboard');
           }
         }
       ]
@@ -581,7 +581,22 @@ const submitForm = async () => {
     
   } catch (error) {
     console.error('음식점 등록 실패:', error);
-    showToast('음식점 등록에 실패했습니다. 다시 시도해주세요.', 'danger');
+    
+    let errorMessage = '음식점 등록에 실패했습니다.';
+    
+    if (error.response?.data?.message) {
+      errorMessage = error.response.data.message;
+    } else if (error.response?.data?.error) {
+      errorMessage = error.response.data.error;
+    } else if (error.response?.status === 400) {
+      errorMessage = '입력 정보를 확인해주세요.';
+    } else if (error.response?.status === 409) {
+      errorMessage = '이미 등록된 사업자등록번호입니다.';
+    } else if (error.response?.status === 500) {
+      errorMessage = '서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.';
+    }
+    
+    showToast(errorMessage, 'danger');
   } finally {
     isLoading.value = false;
   }

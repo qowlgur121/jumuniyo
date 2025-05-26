@@ -105,3 +105,5 @@ dev-debug.log
 # OS specific
 # Task files
 tasks.json
+
+DEVELOPMENT_GUIDE.md
