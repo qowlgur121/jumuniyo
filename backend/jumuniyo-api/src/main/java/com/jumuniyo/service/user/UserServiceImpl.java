@@ -3,14 +3,12 @@ package com.jumuniyo.service.user; // 본인의 패키지 경로에 맞게 수�
 import com.jumuniyo.domain.user.User;
 import com.jumuniyo.domain.user.UserRole;
 import com.jumuniyo.domain.user.UserStatus;
-import com.jumuniyo.domain.user.Owner;
 import com.jumuniyo.dto.user.UserSignUpRequestDto;
 import com.jumuniyo.dto.user.UserLoginRequestDto;
 import com.jumuniyo.dto.user.UserLoginResponseDto;
 import com.jumuniyo.dto.auth.OwnerSignUpRequestDto;
 import com.jumuniyo.dto.auth.OwnerSignUpResponseDto;
 import com.jumuniyo.repository.user.UserRepository;
-import com.jumuniyo.repository.user.OwnerRepository;
 import com.jumuniyo.security.JwtTokenProvider;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -26,7 +24,6 @@ import java.util.Optional;
 public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository; // 생성자 주입
-    private final OwnerRepository ownerRepository; // 생성자 주입
     private final PasswordEncoder passwordEncoder; // 생성자 주입 (Spring Security 설정에서 빈으로 등록 예정)
     private final JwtTokenProvider jwtTokenProvider; // JWT 토큰 생성을 위한 의존성 주입
 
@@ -71,64 +68,35 @@ public class UserServiceImpl implements UserService {
             throw new IllegalArgumentException("이미 사용 중인 닉네임입니다: " + requestDto.getNickname());
         }
 
-        // 3. 사업자등록번호 중복 검사
-        if (ownerRepository.existsByBusinessNumber(requestDto.getBusinessNumber())) {
-            throw new IllegalArgumentException("이미 등록된 사업자등록번호입니다: " + requestDto.getBusinessNumber());
-        }
-
-        // 4. 같은 이메일의 일반회원이 있는지 확인하고 처리
-        Optional<User> existingCustomer = userRepository.findByEmailAndRole(requestDto.getEmail(), UserRole.ROLE_USER);
-        if (existingCustomer.isPresent()) {
-            // 이미 일반회원으로 가입된 이메일인 경우, 새로운 사장님 계정 생성을 허용
-            // 하지만 닉네임은 달라야 함 (이미 위에서 체크함)
-        }
-
-        // 5. 비밀번호 암호화
+        // 3. 비밀번호 암호화
         String encodedPassword = passwordEncoder.encode(requestDto.getPassword());
 
-        // 6. User 엔티티 생성 (기본 사용자 정보)
+        // 4. User 엔티티 생성 (기본 사용자 정보)
         User user = User.builder()
                 .email(requestDto.getEmail())
                 .password(encodedPassword)
                 .nickname(requestDto.getNickname())
                 .phoneNumber(requestDto.getPhoneNumber())
                 .role(UserRole.ROLE_OWNER) // 사장님 역할 설정
-                .status(UserStatus.ACTIVE) // 일반 사용자는 활성 상태
+                .status(UserStatus.ACTIVE) // 활성 상태
                 .profileImageUrl(null)
                 .provider(null) // 일반 가입 (OAuth2 아님)
                 .providerId(null)
                 .build();
 
-        // 7. User 저장
+        // 5. User 저장
         User savedUser = userRepository.save(user);
 
-        // 8. Owner 엔티티 생성 (사장님 전용 정보)
-        Owner owner = Owner.builder()
-                .user(savedUser)
-                .businessNumber(requestDto.getBusinessNumber())
-                .storeName(requestDto.getStoreName())
-                .storeAddress(requestDto.getStoreAddress())
-                .storeAddressDetail(requestDto.getStoreAddressDetail())
-                .storePhoneNumber(requestDto.getStorePhoneNumber())
-                .status(UserStatus.ACTIVE) // 테스트를 위해 바로 활성 상태로 설정
-                .build();
-
-        // 9. Owner 저장
-        Owner savedOwner = ownerRepository.save(owner);
-
-        // 10. 응답 DTO 생성 및 반환
+        // 6. 응답 DTO 생성 및 반환
         return OwnerSignUpResponseDto.of(
                 savedUser.getId(),
                 savedUser.getEmail(),
                 savedUser.getNickname(),
                 savedUser.getPhoneNumber(),
                 savedUser.getRole(),
-                savedOwner.getStatus(), // 사장님 승인 상태
+                savedUser.getStatus(), // 사용자 상태
                 savedUser.getCreatedAt()
         );
-
-        // TODO: 사장님 승인 알림 메일 발송 로직 추가 예정
-        // TODO: 관리자에게 새로운 사장님 가입 알림 전송 로직 추가 예정
     }
 
     @Override
@@ -143,14 +111,9 @@ public class UserServiceImpl implements UserService {
             throw new IllegalArgumentException("비밀번호가 일치하지 않습니다.");
         }
 
-        // 3. 사장님일 경우 Owner 테이블의 승인 상태 확인
-        if (user.getRole() == UserRole.ROLE_OWNER) {
-            Owner owner = ownerRepository.findByUser(user)
-                    .orElseThrow(() -> new IllegalArgumentException("사장님 정보를 찾을 수 없습니다."));
-            
-            if (owner.getStatus() == UserStatus.PENDING_APPROVAL) {
-                throw new IllegalArgumentException("아직 승인 대기 중인 계정입니다. 승인 후 이용해주세요.");
-            }
+        // 3. 사용자 상태 확인
+        if (user.getStatus() != UserStatus.ACTIVE) {
+            throw new IllegalArgumentException("비활성화된 계정입니다. 관리자에게 문의해주세요.");
         }
 
         // 4. 마지막 로그인 시간 업데이트

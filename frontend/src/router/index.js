@@ -116,6 +116,13 @@ const routes = [
     component: () => import('@/views/store/StoreEditPage.vue'),
     meta: { requiresAuth: true } // 인증 필요
   },
+  // 사장님 메뉴 관리
+  {
+    path: '/store/:storeId/menu-management',
+    name: 'MenuManagement',
+    component: () => import('@/views/store/MenuManagementPage.vue'),
+    meta: { requiresAuth: true, requiresOwner: true }
+  },
 
 ];
 

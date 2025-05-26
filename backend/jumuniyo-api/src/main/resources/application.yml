@@ -20,6 +20,13 @@ spring:
         default_batch_fetch_size: 100
         # dialect: org.hibernate.dialect.MySQLDialect # MySQL 사용 시 보통 자동 감지
 
+  # --- 파일 업로드 설정 ---
+  servlet:
+    multipart:
+      max-file-size: 5MB
+      max-request-size: 10MB
+      enabled: true
+
   # --- OAuth2 소셜 로그인 설정 ---
   security:
     oauth2:
@@ -78,6 +85,12 @@ spring:
 jwt:
   secret-key: jumuniyoSecretKeyForJWTTokenGenerationThatMustBeLongEnoughForHS256AlgorithmSecurity
   token-validity-in-seconds: 86400 # 24시간 (24 * 60 * 60)
+
+# --- 파일 업로드 설정 ---
+file:
+  upload:
+    path: ${user.home}/jumuniyo/uploads
+    base-url: http://localhost:8081
 
 # --- 로깅 설정 ---
 logging:

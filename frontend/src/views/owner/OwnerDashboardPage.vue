@@ -201,6 +201,17 @@
               <p v-else>가게를 선택한 후 정보를 수정하세요</p>
             </div>
 
+            <div 
+              class="action-card" 
+              :class="{ 'disabled': !selectedStoreId }"
+              @click="goToMenuManagement"
+            >
+              <div class="action-icon">🍽️</div>
+              <h3>메뉴 관리</h3>
+              <p v-if="selectedStoreId">{{ selectedStore?.name }} 메뉴를 관리하세요</p>
+              <p v-else>가게를 선택한 후 메뉴를 관리하세요</p>
+            </div>
+
             <div class="action-card" @click="goToAnalytics">
               <div class="action-icon">📈</div>
               <h3>매출 분석</h3>
@@ -391,6 +402,19 @@ const getStatusText = (status) => {
 // 네비게이션 함수들
 const goToOrders = () => {
   router.push('/owner/orders');
+};
+
+const goToMenuManagement = () => {
+  if (!selectedStoreId.value) {
+    const toast = toastController.create({
+      message: '가게를 먼저 선택해주세요.',
+      duration: 2000,
+      color: 'warning'
+    });
+    toast.then(t => t.present());
+    return;
+  }
+  router.push(`/store/${selectedStoreId.value}/menu-management`);
 };
 
 const goToAnalytics = () => {

@@ -12,6 +12,7 @@ const apiClient = axios.create({
   timeout: 10000, // 서버 응답을 10초(10000밀리초)까지 기다릴 것임.
   headers: { // 모든 요청에 기본적으로 포함될 정보들임.
     'Content-Type': 'application/json', // 보내는 데이터는 JSON 형식이라고 서버에 알려주는 것임.
+    // X-Owner-Id는 요청 인터셉터에서 동적으로 설정
     // 'X-Requested-With': 'XMLHttpRequest', // 필요에 따라 추가할 수 있는 정보임 (지금은 몰라도 됨).
   },
   withCredentials: true, // 요청 보낼 때 쿠키 같은 사용자 자격 증명 정보를 포함할지 설정하는 것임.
@@ -27,6 +28,20 @@ apiClient.interceptors.request.use(
     if (token) {
       config.headers['Authorization'] = `Bearer ${token}`; // 헤더에 토큰 추가하는 것
     }
+
+    // 사용자 정보에서 userId를 가져와서 X-Owner-Id 헤더에 설정
+    const userStr = localStorage.getItem('user');
+    if (userStr) {
+      try {
+        const user = JSON.parse(userStr);
+        if (user.userId) {
+          config.headers['X-Owner-Id'] = user.userId.toString();
+        }
+      } catch (error) {
+        console.error('사용자 정보 파싱 오류:', error);
+      }
+    }
+
     console.log('Request Interceptor:', config); // 개발 중에 어떤 요청이 나가는지 확인용 로그임.
     return config; // 설정을 변경했으면 변경된 설정을 다시 반환해야 요청이 계속 진행됨.
   },
@@ -64,5 +79,83 @@ apiClient.interceptors.response.use(
     return Promise.reject(error); // 에러를 계속 넘겨주어 이 코드를 사용한 곳에서 에러를 처리할 수 있게 함.
   }
 );
+
+// 메뉴 관리 API 함수들
+export const menuApi = {
+  // 카테고리 관련
+  getMenuCategories: (storeId, activeOnly = false) =>
+    apiClient.get(`/stores/${storeId}/menu-categories?activeOnly=${activeOnly}`),
+  
+  getMenuCategory: (storeId, categoryId) =>
+    apiClient.get(`/stores/${storeId}/menu-categories/${categoryId}`),
+  
+  createMenuCategory: (storeId, data) =>
+    apiClient.post(`/stores/${storeId}/menu-categories`, data),
+  
+  updateMenuCategory: (storeId, categoryId, data) =>
+    apiClient.put(`/stores/${storeId}/menu-categories/${categoryId}`, data),
+  
+  deleteMenuCategory: (storeId, categoryId) =>
+    apiClient.delete(`/stores/${storeId}/menu-categories/${categoryId}`),
+  
+  toggleMenuCategoryStatus: (storeId, categoryId) =>
+    apiClient.patch(`/stores/${storeId}/menu-categories/${categoryId}/toggle-status`),
+
+  // 메뉴 관련
+  getMenus: (storeId, availableOnly = false, categoryId = null) => {
+    let url = `/stores/${storeId}/menus?availableOnly=${availableOnly}`
+    if (categoryId) {
+      url += `&categoryId=${categoryId}`
+    }
+    return apiClient.get(url)
+  },
+  
+  getMenu: (storeId, menuId) =>
+    apiClient.get(`/stores/${storeId}/menus/${menuId}`),
+  
+  createMenu: (storeId, data) =>
+    apiClient.post(`/stores/${storeId}/menus`, data),
+  
+  createMenuWithImage: (storeId, data, imageFile) => {
+    const formData = new FormData()
+    formData.append('menu', JSON.stringify(data))
+    formData.append('image', imageFile)
+    
+    return apiClient.post(`/stores/${storeId}/menus/with-image`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    })
+  },
+  
+  updateMenu: (storeId, menuId, data) =>
+    apiClient.put(`/stores/${storeId}/menus/${menuId}`, data),
+  
+  updateMenuImage: (storeId, menuId, imageFile) => {
+    const formData = new FormData()
+    formData.append('image', imageFile)
+    
+    return apiClient.put(`/stores/${storeId}/menus/${menuId}/image`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    })
+  },
+  
+  deleteMenu: (storeId, menuId) =>
+    apiClient.delete(`/stores/${storeId}/menus/${menuId}`),
+  
+  toggleMenuAvailability: (storeId, menuId) =>
+    apiClient.patch(`/stores/${storeId}/menus/${menuId}/toggle-availability`),
+  
+  toggleMenuRecommendation: (storeId, menuId) =>
+    apiClient.patch(`/stores/${storeId}/menus/${menuId}/toggle-recommendation`),
+  
+  getRecommendedMenus: (storeId) =>
+    apiClient.get(`/stores/${storeId}/menus/recommended`),
+  
+  getPopularMenus: (storeId) =>
+    apiClient.get(`/stores/${storeId}/menus/popular`)
+}
 
 export default apiClient; // 우리가 설정한 Axios 인스턴스를 다른 파일에서 가져다 쓸 수 있게 내보내는 것임.

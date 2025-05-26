@@ -159,4 +159,8 @@ public class Store {
     public boolean isOwnedBy(User user) {
         return this.owner.getId().equals(user.getId());
     }
+
+    public boolean isOwnedBy(Long ownerId) {
+        return this.owner.getId().equals(ownerId);
+    }
 } 

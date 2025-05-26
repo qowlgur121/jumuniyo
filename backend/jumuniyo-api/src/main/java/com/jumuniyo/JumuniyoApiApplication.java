@@ -1,12 +1,21 @@
 package com.jumuniyo;
 
 import com.jumuniyo.domain.store.Category;
+import com.jumuniyo.domain.store.Store;
+import com.jumuniyo.domain.user.User;
+import com.jumuniyo.domain.user.UserRole;
+import com.jumuniyo.domain.user.UserStatus;
 import com.jumuniyo.repository.store.CategoryRepository;
+import com.jumuniyo.repository.store.StoreRepository;
+import com.jumuniyo.repository.user.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
+import org.springframework.security.crypto.password.PasswordEncoder;
+
+import java.math.BigDecimal;
 
 @SpringBootApplication
 @RequiredArgsConstructor
@@ -17,7 +26,8 @@ public class JumuniyoApiApplication {
 	}
 
 	@Bean
-	CommandLineRunner initCategories(CategoryRepository categoryRepository) {
+	CommandLineRunner initData(CategoryRepository categoryRepository, UserRepository userRepository, 
+							   StoreRepository storeRepository, PasswordEncoder passwordEncoder) {
 		return args -> {
 			// 카테고리가 없을 때만 초기 데이터 추가
 			if (categoryRepository.count() == 0) {
@@ -136,6 +146,40 @@ public class JumuniyoApiApplication {
 						.build());
 				
 				System.out.println("카테고리 초기 데이터가 추가되었습니다.");
+			}
+			
+			// 사용자가 없을 때만 초기 사용자 추가
+			if (userRepository.count() == 0) {
+				User owner = User.builder()
+						.email("owner@test.com")
+						.password(passwordEncoder.encode("password123"))
+						.nickname("테스트사장님")
+						.phoneNumber("010-1234-5678")
+						.role(UserRole.ROLE_OWNER)
+						.status(UserStatus.ACTIVE)
+						.build();
+				userRepository.save(owner);
+				System.out.println("테스트 사용자가 추가되었습니다.");
+				
+				// 가게가 없을 때만 초기 가게 추가
+				if (storeRepository.count() == 0) {
+					Category category = categoryRepository.findByName("한식").orElse(null);
+					if (category != null) {
+						Store store = Store.builder()
+								.name("테스트 한식당")
+								.description("맛있는 한식을 제공하는 테스트 음식점입니다.")
+								.address("서울시 강남구 테스트로 123")
+								.phoneNumber("02-1234-5678")
+								.businessNumber("123-45-67890")
+								.minimumOrderAmount(new BigDecimal("15000"))
+								.deliveryFee(new BigDecimal("3000"))
+								.category(category)
+								.owner(owner)
+								.build();
+						storeRepository.save(store);
+						System.out.println("테스트 가게가 추가되었습니다.");
+					}
+				}
 			}
 		};
 	}
