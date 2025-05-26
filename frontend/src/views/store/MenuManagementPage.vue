@@ -161,6 +161,23 @@
             placeholder="메뉴에 대한 설명을 입력하세요"
           ></ion-textarea>
         </ion-item>
+
+        <!-- 메뉴 이미지 업로드 -->
+        <ion-item>
+          <div class="image-upload-section">
+            <ion-label>메뉴 이미지</ion-label>
+            <ImageUploader
+              image-type="menu"
+              :store-id="storeId"
+              :menu-id="editingMenu?.id"
+              :existing-image-url="editingMenu?.imageUrl"
+              @image-selected="onMenuImageSelected"
+              @upload-success="onMenuImageUploadSuccess"
+              @upload-error="onMenuImageUploadError"
+              @image-removed="onMenuImageRemoved"
+            />
+          </div>
+        </ion-item>
         <ion-item>
           <ion-input 
             v-model="menuForm.price" 
@@ -198,6 +215,7 @@ import {
 } from 'ionicons/icons'
 import { useRouter, useRoute } from 'vue-router'
 import { menuApi } from '@/services/api'
+import ImageUploader from '@/components/ImageUploader.vue'
 
 export default {
   name: 'MenuManagementPage',
@@ -205,7 +223,7 @@ export default {
     IonPage, IonHeader, IonToolbar, IonTitle, IonContent, IonButtons, IonBackButton,
     IonButton, IonIcon, IonSegment, IonSegmentButton, IonLabel, IonCard, IonCardContent,
     IonToggle, IonChip, IonFab, IonFabButton, IonModal, IonItem, IonInput, IonTextarea,
-    IonCheckbox
+    IonCheckbox, ImageUploader
   },
   setup() {
     // 반응형 데이터
@@ -453,6 +471,25 @@ export default {
       await alert.present()
     }
 
+    // 이미지 업로드 이벤트 핸들러
+    const onMenuImageSelected = (file) => {
+      console.log('메뉴 이미지 선택됨:', file)
+    }
+
+    const onMenuImageUploadSuccess = (response) => {
+      console.log('메뉴 이미지 업로드 성공:', response)
+      // 메뉴 목록 새로고침
+      loadMenus()
+    }
+
+    const onMenuImageUploadError = (error) => {
+      console.error('메뉴 이미지 업로드 실패:', error)
+    }
+
+    const onMenuImageRemoved = () => {
+      console.log('메뉴 이미지 제거됨')
+    }
+
     // 라이프사이클
     onMounted(() => {
       loadCategories()
@@ -471,7 +508,11 @@ export default {
       // 메서드
       onCategoryChange, openAddCategoryModal, closeCategoryModal, saveCategory,
       openAddMenuModal, closeMenuModal, editMenu, saveMenu,
-      toggleMenuAvailability, deleteMenu
+      toggleMenuAvailability, deleteMenu,
+      // 이미지 업로드 이벤트 핸들러
+      onMenuImageSelected, onMenuImageUploadSuccess, onMenuImageUploadError, onMenuImageRemoved,
+      // 계산된 속성
+      storeId
     }
   }
 }
@@ -746,6 +787,19 @@ export default {
   --border-color: #e9ecef;
   --border-color-checked: #ff1744;
   --checkmark-color: white;
+}
+
+/* 이미지 업로드 섹션 스타일 */
+.image-upload-section {
+  width: 100%;
+  padding: 16px 0;
+}
+
+.image-upload-section ion-label {
+  display: block;
+  margin-bottom: 12px;
+  font-weight: 600;
+  color: #333333;
 }
 
 /* 반응형 디자인 */

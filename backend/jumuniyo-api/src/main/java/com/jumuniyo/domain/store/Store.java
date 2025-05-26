@@ -36,6 +36,12 @@ public class Store {
     @Column(nullable = false, length = 255)
     private String address; // 가게 주소
 
+    @Column(precision = 10, scale = 8)
+    private BigDecimal latitude; // 위도
+
+    @Column(precision = 11, scale = 8)
+    private BigDecimal longitude; // 경도
+
     @Column(length = 20)
     private String phoneNumber; // 가게 전화번호
 
@@ -87,12 +93,15 @@ public class Store {
     private LocalDateTime updatedAt;
 
     @Builder
-    public Store(String name, String description, String address, String phoneNumber, 
-                 String businessNumber, String logoImageUrl, BigDecimal minimumOrderAmount, 
-                 BigDecimal deliveryFee, Category category, User owner) {
+    public Store(String name, String description, String address, BigDecimal latitude, 
+                 BigDecimal longitude, String phoneNumber, String businessNumber, 
+                 String logoImageUrl, BigDecimal minimumOrderAmount, BigDecimal deliveryFee, 
+                 Category category, User owner) {
         this.name = name;
         this.description = description;
         this.address = address;
+        this.latitude = latitude;
+        this.longitude = longitude;
         this.phoneNumber = phoneNumber;
         this.businessNumber = businessNumber;
         this.logoImageUrl = logoImageUrl;
@@ -108,6 +117,17 @@ public class Store {
         this.description = description;
         this.address = address;
         this.phoneNumber = phoneNumber;
+    }
+
+    public void updateLocation(BigDecimal latitude, BigDecimal longitude) {
+        this.latitude = latitude;
+        this.longitude = longitude;
+    }
+
+    public void updateAddressAndLocation(String address, BigDecimal latitude, BigDecimal longitude) {
+        this.address = address;
+        this.latitude = latitude;
+        this.longitude = longitude;
     }
 
     public void updateCategory(Category category) {

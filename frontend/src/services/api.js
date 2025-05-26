@@ -158,4 +158,33 @@ export const menuApi = {
     apiClient.get(`/stores/${storeId}/menus/popular`)
 }
 
+// 파일 업로드 API 함수들
+export const fileUploadApi = {
+  // 가게 로고 이미지 업로드
+  uploadStoreLogo: (storeId, formData, config = {}) =>
+    apiClient.post(`/stores/${storeId}/logo`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      },
+      ...config
+    }),
+  
+  // 가게 로고 이미지 삭제
+  deleteStoreLogo: (storeId) =>
+    apiClient.delete(`/stores/${storeId}/logo`),
+  
+  // 메뉴 이미지 업로드 (기존 메뉴)
+  updateMenuImage: (storeId, menuId, formData, config = {}) =>
+    apiClient.put(`/stores/${storeId}/menus/${menuId}/image`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      },
+      ...config
+    }),
+  
+  // 메뉴 이미지 삭제
+  deleteMenuImage: (storeId, menuId) =>
+    apiClient.delete(`/stores/${storeId}/menus/${menuId}/image`)
+}
+
 export default apiClient; // 우리가 설정한 Axios 인스턴스를 다른 파일에서 가져다 쓸 수 있게 내보내는 것임.
