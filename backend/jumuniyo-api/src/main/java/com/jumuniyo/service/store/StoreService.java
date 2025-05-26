@@ -127,4 +127,14 @@ public interface StoreService {
      * 음식점 영업 상태 토글
      */
     StoreResponseDto toggleStoreStatus(Long storeId, String ownerEmail);
+
+    /**
+     * 가게 로고 이미지 업데이트
+     */
+    StoreResponseDto updateStoreLogo(Long storeId, String imageUrl, Long ownerId);
+
+    /**
+     * 가게 로고 이미지 삭제
+     */
+    void deleteStoreLogo(Long storeId, Long ownerId);
 } 

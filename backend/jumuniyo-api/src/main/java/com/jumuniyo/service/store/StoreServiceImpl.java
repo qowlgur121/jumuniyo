@@ -353,26 +353,66 @@ public class StoreServiceImpl implements StoreService {
     @Override
     @Transactional
     public StoreResponseDto toggleStoreStatus(Long storeId, String ownerEmail) {
-        Store existingStore = getStore(storeId);
+        Store store = getStore(storeId);
         
         // 사용자 조회
         User owner = userRepository.findByEmail(ownerEmail)
                 .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다: " + ownerEmail));
         
         // 소유자 권한 체크
-        if (!existingStore.isOwnedBy(owner)) {
-            throw new IllegalArgumentException("음식점 영업 상태를 변경할 권한이 없습니다.");
+        if (!store.isOwnedBy(owner)) {
+            throw new IllegalArgumentException("음식점 상태를 변경할 권한이 없습니다.");
         }
         
-        // 영업 상태 토글
-        if (existingStore.getIsActive()) {
-            existingStore.deactivate();
+        // 상태 토글
+        if (store.getIsActive()) {
+            store.deactivate();
             log.info("Store deactivated: {}", storeId);
         } else {
-            existingStore.activate();
+            store.activate();
             log.info("Store activated: {}", storeId);
         }
         
-        return StoreResponseDto.from(existingStore);
+        return StoreResponseDto.from(store);
+    }
+
+    @Override
+    @Transactional
+    public StoreResponseDto updateStoreLogo(Long storeId, String imageUrl, Long ownerId) {
+        log.info("Updating store logo: storeId={}, ownerId={}", storeId, ownerId);
+        
+        Store store = getStore(storeId);
+        
+        // 소유자 권한 체크
+        if (!store.isOwnedBy(ownerId)) {
+            throw new IllegalArgumentException("가게 로고를 수정할 권한이 없습니다.");
+        }
+        
+        // 로고 이미지 업데이트
+        store.updateLogoImage(imageUrl);
+        
+        log.info("Store logo updated successfully: storeId={}", storeId);
+        return StoreResponseDto.from(store);
+    }
+
+    @Override
+    @Transactional
+    public void deleteStoreLogo(Long storeId, Long ownerId) {
+        log.info("Deleting store logo: storeId={}, ownerId={}", storeId, ownerId);
+        
+        Store store = getStore(storeId);
+        
+        // 소유자 권한 체크
+        if (!store.isOwnedBy(ownerId)) {
+            throw new IllegalArgumentException("가게 로고를 삭제할 권한이 없습니다.");
+        }
+        
+        // 기존 로고 이미지 URL 가져오기
+        String currentLogoUrl = store.getLogoImageUrl();
+        
+        // 로고 이미지 제거
+        store.updateLogoImage(null);
+        
+        log.info("Store logo deleted successfully: storeId={}", storeId);
     }
 } 

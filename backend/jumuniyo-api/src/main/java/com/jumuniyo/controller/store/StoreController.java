@@ -4,6 +4,7 @@ import com.jumuniyo.dto.store.StoreCreateRequestDto;
 import com.jumuniyo.dto.store.StoreResponseDto;
 import com.jumuniyo.dto.store.StoreUpdateRequestDto;
 import com.jumuniyo.service.store.StoreService;
+import com.jumuniyo.service.file.FileUploadService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -15,6 +16,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -26,6 +28,7 @@ import java.util.Map;
 public class StoreController {
 
     private final StoreService storeService;
+    private final FileUploadService fileUploadService;
 
     /**
      * 음식점 등록
@@ -178,6 +181,56 @@ public class StoreController {
         response.put("status", responseDto.getIsActive() ? "영업중" : "휴업중");
         
         log.info("음식점 영업 상태 토글 완료: ID={}, 상태={}", storeId, responseDto.getIsActive());
+        return ResponseEntity.ok(response);
+    }
+
+    /**
+     * 가게 로고 이미지 업로드
+     */
+    @PostMapping("/{storeId}/logo")
+    public ResponseEntity<Map<String, String>> uploadStoreLogo(
+            @PathVariable Long storeId,
+            @RequestPart("image") MultipartFile imageFile,
+            @RequestHeader("X-Owner-Id") Long ownerId) {
+        log.info("가게 로고 이미지 업로드 요청: storeId={}, ownerId={}", storeId, ownerId);
+        
+        // 파일 유효성 검사
+        if (!fileUploadService.isValidImageFile(imageFile)) {
+            Map<String, String> errorResponse = new HashMap<>();
+            errorResponse.put("error", "유효하지 않은 이미지 파일입니다.");
+            return ResponseEntity.badRequest().body(errorResponse);
+        }
+        
+        // 이미지 업로드
+        String imageUrl = fileUploadService.uploadStoreLogoImage(imageFile, storeId);
+        
+        // 가게 정보 업데이트 (StoreService에 메서드 추가 필요)
+        StoreResponseDto updatedStore = storeService.updateStoreLogo(storeId, imageUrl, ownerId);
+        
+        Map<String, String> response = new HashMap<>();
+        response.put("message", "로고 이미지가 성공적으로 업로드되었습니다.");
+        response.put("imageUrl", imageUrl);
+        
+        log.info("가게 로고 이미지 업로드 완료: storeId={}, imageUrl={}", storeId, imageUrl);
+        return ResponseEntity.ok(response);
+    }
+
+    /**
+     * 가게 로고 이미지 삭제
+     */
+    @DeleteMapping("/{storeId}/logo")
+    public ResponseEntity<Map<String, String>> deleteStoreLogo(
+            @PathVariable Long storeId,
+            @RequestHeader("X-Owner-Id") Long ownerId) {
+        log.info("가게 로고 이미지 삭제 요청: storeId={}, ownerId={}", storeId, ownerId);
+        
+        // 가게 로고 삭제 (StoreService에 메서드 추가 필요)
+        storeService.deleteStoreLogo(storeId, ownerId);
+        
+        Map<String, String> response = new HashMap<>();
+        response.put("message", "로고 이미지가 성공적으로 삭제되었습니다.");
+        
+        log.info("가게 로고 이미지 삭제 완료: storeId={}", storeId);
         return ResponseEntity.ok(response);
     }
 } 
