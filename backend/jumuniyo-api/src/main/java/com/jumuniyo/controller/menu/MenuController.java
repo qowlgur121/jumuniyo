@@ -34,12 +34,21 @@ public class MenuController {
     @PostMapping("/with-image")
     public ResponseEntity<MenuResponseDto> createMenuWithImage(
             @PathVariable Long storeId,
-            @Valid @RequestPart("menu") MenuRequestDto requestDto,
-            @RequestPart("image") MultipartFile imageFile,
+            @RequestPart("menu") String menuJson,
+            @RequestPart(value = "image", required = false) MultipartFile imageFile,
             @RequestHeader("X-Owner-Id") Long ownerId) {
         
-        MenuResponseDto response = menuService.createMenuWithImage(storeId, requestDto, imageFile, ownerId);
-        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+        try {
+            // JSON 문자열을 MenuRequestDto로 변환
+            com.fasterxml.jackson.databind.ObjectMapper objectMapper = new com.fasterxml.jackson.databind.ObjectMapper();
+            MenuRequestDto requestDto = objectMapper.readValue(menuJson, MenuRequestDto.class);
+            
+            MenuResponseDto response = menuService.createMenuWithImage(storeId, requestDto, imageFile, ownerId);
+            return ResponseEntity.status(HttpStatus.CREATED).body(response);
+        } catch (Exception e) {
+            log.error("메뉴 JSON 파싱 오류: ", e);
+            return ResponseEntity.badRequest().build();
+        }
     }
 
     @PutMapping("/{menuId}")

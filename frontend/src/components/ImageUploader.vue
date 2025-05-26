@@ -57,7 +57,7 @@
       </ion-button>
       
       <ion-button 
-        v-if="previewUrl && !isUploading" 
+        v-if="previewUrl && !isUploading && autoUpload" 
         color="primary" 
         size="small"
         @click="uploadImage"
@@ -118,6 +118,10 @@ const props = defineProps({
   menuId: {
     type: Number,
     default: null
+  },
+  autoUpload: {
+    type: Boolean,
+    default: true
   }
 })
 

@@ -34,7 +34,14 @@ public class WebConfig implements WebMvcConfigurer {
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
         // 업로드된 파일들을 정적 리소스로 서빙
+        String absoluteUploadPath = uploadPath.startsWith("/") ? uploadPath : System.getProperty("user.home") + "/" + uploadPath;
+        
         registry.addResourceHandler("/uploads/**")
-                .addResourceLocations("file:" + uploadPath + "/");
+                .addResourceLocations("file:" + absoluteUploadPath + "/")
+                .setCachePeriod(3600) // 캐시 설정 (1시간)
+                .resourceChain(true);
+                
+        // 로그로 경로 확인
+        System.out.println("Static resource mapping: /uploads/** -> file:" + absoluteUploadPath + "/");
     }
 }

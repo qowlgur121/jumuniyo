@@ -341,17 +341,18 @@
           <div class="form-section">
             <h2 class="section-title">추가 정보</h2>
             
-            <!-- 로고 이미지 URL -->
-            <ion-item class="form-item">
-              <ion-input
-                v-model="formData.logoImageUrl"
-                placeholder="https://example.com/logo.jpg"
-                type="url"
-              >
-                <div slot="label">로고 이미지 URL</div>
-              </ion-input>
-            </ion-item>
-            <div class="form-note">로고 이미지는 나중에 추가할 수 있습니다.</div>
+            <!-- 로고 이미지 업로드 -->
+            <div class="image-upload-section">
+              <h3 class="field-label">가게 로고</h3>
+              <ImageUploader
+                image-type="logo"
+                :auto-upload="false"
+                :existing-image-url="formData.logoImageUrl"
+                @image-selected="onLogoImageSelected"
+                @image-removed="onLogoImageRemoved"
+              />
+              <div class="form-note">로고 이미지는 나중에 추가할 수 있습니다.</div>
+            </div>
           </div>
 
           <!-- 제출 버튼 -->
@@ -399,7 +400,9 @@ import {
   alertController
 } from '@ionic/vue';
 import { categoryApi, storeApi } from '@/services/storeApi.js';
+import { fileUploadApi } from '@/services/api.js';
 import { addOutline, trashOutline, flashOutline } from 'ionicons/icons';
+import ImageUploader from '@/components/ImageUploader.vue';
 
 const router = useRouter();
 
@@ -407,6 +410,7 @@ const router = useRouter();
 const isLoading = ref(false);
 const categories = ref([]);
 const isDevelopment = ref(import.meta.env.DEV);
+const selectedLogoFile = ref(null);
 
 // 요일 데이터
 const daysOfWeek = [
@@ -534,6 +538,37 @@ const validateField = (fieldName) => {
   }
 };
 
+// 이미지 업로드 관련 이벤트 핸들러
+const onLogoImageSelected = (file) => {
+  console.log('로고 이미지 선택됨:', file);
+  selectedLogoFile.value = file;
+};
+
+const onLogoImageRemoved = () => {
+  console.log('로고 이미지 제거됨');
+  selectedLogoFile.value = null;
+  formData.logoImageUrl = '';
+};
+
+// 이미지 업로드 함수
+const uploadLogoImage = async (storeId) => {
+  if (!selectedLogoFile.value) {
+    return null;
+  }
+
+  try {
+    const formDataForUpload = new FormData();
+    formDataForUpload.append('image', selectedLogoFile.value);
+    
+    const response = await fileUploadApi.uploadStoreLogo(storeId, formDataForUpload);
+    console.log('로고 이미지 업로드 성공:', response.data);
+    return response.data.imageUrl;
+  } catch (error) {
+    console.error('로고 이미지 업로드 실패:', error);
+    throw error;
+  }
+};
+
 // 폼 제출
 const submitForm = async () => {
   // 모든 필드 유효성 검증
@@ -547,7 +582,7 @@ const submitForm = async () => {
   isLoading.value = true;
 
   try {
-    // 주소와 상세주소를 합쳐서 전송
+    // 1단계: 가게 정보 먼저 등록
     const submitData = {
       ...formData,
       address: formData.detailAddress 
@@ -562,7 +597,22 @@ const submitForm = async () => {
       }))
     };
     
-    const response = await storeApi.createStore(submitData);
+    const storeResponse = await storeApi.createStore(submitData);
+    const storeId = storeResponse.data.id;
+    
+    // 2단계: 로고 이미지가 선택되었다면 업로드
+    if (selectedLogoFile.value) {
+      try {
+        const imageUrl = await uploadLogoImage(storeId);
+        console.log('로고 이미지 업로드 완료:', imageUrl);
+        showToast('가게 등록 및 로고 업로드가 완료되었습니다!', 'success');
+      } catch (imageError) {
+        console.error('로고 이미지 업로드 실패:', imageError);
+        showToast('가게는 등록되었지만 로고 업로드에 실패했습니다. 나중에 다시 시도해주세요.', 'warning');
+      }
+    } else {
+      showToast('가게가 성공적으로 등록되었습니다!', 'success');
+    }
     
     // 성공 알림
     const alert = await alertController.create({
@@ -738,7 +788,7 @@ const fillDummyData = () => {
   formData.detailAddress = '456호';
   formData.phoneNumber = '02-1234-5678';
   formData.businessNumber = '123-45-67890';
-  formData.logoImageUrl = 'https://via.placeholder.com/300x200?text=치킨집+로고';
+  // 로고 이미지는 실제 파일 업로드로 처리
   
   // 배달 정보
   formData.minimumOrderAmount = 15000;
@@ -1011,6 +1061,19 @@ const fillDummyData = () => {
   --color: var(--ion-color-medium-contrast);
   --box-shadow: none;
   transform: none;
+}
+
+/* 이미지 업로드 섹션 스타일 */
+.image-upload-section {
+  padding: 20px 0;
+}
+
+.field-label {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--ion-color-dark);
+  margin-bottom: 12px;
+  text-align: center;
 }
 
 /* 반응형 디자인 */

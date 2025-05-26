@@ -5,6 +5,7 @@ import com.jumuniyo.dto.store.StoreResponseDto;
 import com.jumuniyo.dto.store.StoreUpdateRequestDto;
 import com.jumuniyo.service.store.StoreService;
 import com.jumuniyo.service.file.FileUploadService;
+import com.jumuniyo.util.PaginationUtils;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -18,6 +19,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -103,10 +105,13 @@ public class StoreController {
             @PageableDefault(size = 10) Pageable pageable) {
         log.info("내 음식점 목록 조회 요청");
         
+        // 페이지네이션 파라미터 검증
+        Pageable validatedPageable = PaginationUtils.validateAndSanitizePageable(pageable);
+        
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String userEmail = authentication.getName();
         
-        Page<StoreResponseDto> stores = storeService.getStoresByOwner(userEmail, pageable);
+        Page<StoreResponseDto> stores = storeService.getStoresByOwner(userEmail, validatedPageable);
         
         return ResponseEntity.ok(stores);
     }
@@ -121,12 +126,61 @@ public class StoreController {
             @RequestParam(required = false) String area,
             @RequestParam(required = false, defaultValue = "rating") String sortBy,
             @RequestParam(required = false, defaultValue = "false") Boolean approvedOnly,
+            // 필터링 파라미터 추가
+            @RequestParam(required = false) BigDecimal minRating,
+            @RequestParam(required = false) BigDecimal maxMinimumOrderAmount,
+            @RequestParam(required = false) BigDecimal maxDeliveryFee,
+            @RequestParam(required = false) Integer maxDeliveryTime,
+            @RequestParam(required = false) Integer minReviewCount,
+            @RequestParam(required = false, defaultValue = "false") Boolean freeDeliveryOnly,
+            @RequestParam(required = false, defaultValue = "false") Boolean newStoreOnly,
             @PageableDefault(size = 20) Pageable pageable) {
-        log.info("음식점 검색 요청: keyword={}, categoryId={}, area={}, sortBy={}", 
-                keyword, categoryId, area, sortBy);
+        log.info("음식점 검색 요청: keyword={}, categoryId={}, area={}, sortBy={}, minRating={}, maxDeliveryFee={}", 
+                keyword, categoryId, area, sortBy, minRating, maxDeliveryFee);
         
-        Page<StoreResponseDto> stores = storeService.searchStores(
-                keyword, categoryId, area, sortBy, approvedOnly, pageable);
+        // 페이지네이션 파라미터 검증
+        Pageable validatedPageable = PaginationUtils.validateAndSanitizePageable(pageable);
+        
+        Page<StoreResponseDto> stores = storeService.searchStoresWithFilters(
+                keyword, categoryId, area, sortBy, approvedOnly, 
+                minRating, maxMinimumOrderAmount, maxDeliveryFee, maxDeliveryTime, 
+                minReviewCount, freeDeliveryOnly, newStoreOnly, validatedPageable);
+        
+        return ResponseEntity.ok(stores);
+    }
+
+    /**
+     * 위치 기반 음식점 검색
+     */
+    @GetMapping("/location")
+    public ResponseEntity<Page<StoreResponseDto>> searchStoresWithLocation(
+            @RequestParam BigDecimal latitude,
+            @RequestParam BigDecimal longitude,
+            @RequestParam(required = false) Double radiusKm,
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) Long categoryId,
+            @RequestParam(required = false) String area,
+            @RequestParam(required = false, defaultValue = "distance") String sortBy,
+            @RequestParam(required = false, defaultValue = "false") Boolean approvedOnly,
+            // 필터링 파라미터 추가
+            @RequestParam(required = false) BigDecimal minRating,
+            @RequestParam(required = false) BigDecimal maxMinimumOrderAmount,
+            @RequestParam(required = false) BigDecimal maxDeliveryFee,
+            @RequestParam(required = false) Integer maxDeliveryTime,
+            @RequestParam(required = false) Integer minReviewCount,
+            @RequestParam(required = false, defaultValue = "false") Boolean freeDeliveryOnly,
+            @RequestParam(required = false, defaultValue = "false") Boolean newStoreOnly,
+            @PageableDefault(size = 20) Pageable pageable) {
+        log.info("위치 기반 음식점 검색 요청: lat={}, lng={}, radius={}, keyword={}, categoryId={}, area={}, sortBy={}", 
+                latitude, longitude, radiusKm, keyword, categoryId, area, sortBy);
+        
+        // 페이지네이션 파라미터 검증
+        Pageable validatedPageable = PaginationUtils.validateAndSanitizePageable(pageable);
+        
+        Page<StoreResponseDto> stores = storeService.searchStoresWithLocationAndFilters(
+                keyword, categoryId, area, latitude, longitude, radiusKm, sortBy, approvedOnly,
+                minRating, maxMinimumOrderAmount, maxDeliveryFee, maxDeliveryTime, 
+                minReviewCount, freeDeliveryOnly, newStoreOnly, validatedPageable);
         
         return ResponseEntity.ok(stores);
     }

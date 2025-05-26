@@ -171,6 +171,7 @@
               :store-id="storeId"
               :menu-id="editingMenu?.id"
               :existing-image-url="editingMenu?.imageUrl"
+              :auto-upload="!!editingMenu"
               @image-selected="onMenuImageSelected"
               @upload-success="onMenuImageUploadSuccess"
               @upload-error="onMenuImageUploadError"
@@ -233,6 +234,7 @@ export default {
     const categories = ref([])
     const menus = ref([])
     const selectedCategoryId = ref(null)
+    const selectedMenuImage = ref(null)
 
     // 모달 상태
     const isCategoryModalOpen = ref(false)
@@ -349,6 +351,7 @@ export default {
       }
       
       editingMenu.value = null
+      selectedMenuImage.value = null
       menuForm.value = {
         name: '',
         description: '',
@@ -361,10 +364,12 @@ export default {
     const closeMenuModal = () => {
       isMenuModalOpen.value = false
       editingMenu.value = null
+      selectedMenuImage.value = null
     }
 
     const editMenu = (menu) => {
       editingMenu.value = menu
+      selectedMenuImage.value = null
       menuForm.value = {
         name: menu.name,
         description: menu.description || '',
@@ -382,9 +387,16 @@ export default {
         }
         
         if (editingMenu.value) {
+          // 메뉴 수정
           await menuApi.updateMenu(storeId.value, editingMenu.value.id, menuData)
         } else {
-          await menuApi.createMenu(storeId.value, menuData)
+          // 메뉴 생성 - 이미지가 있고 파일이 실제로 존재할 때만 createMenuWithImage 사용
+          if (selectedMenuImage.value && selectedMenuImage.value instanceof File) {
+            await menuApi.createMenuWithImage(storeId.value, menuData, selectedMenuImage.value)
+          } else {
+            // 이미지 없이 메뉴만 생성
+            await menuApi.createMenu(storeId.value, menuData)
+          }
         }
         
         await loadMenus()
@@ -399,7 +411,7 @@ export default {
       } catch (error) {
         console.error('메뉴 저장 실패:', error)
         const toast = await toastController.create({
-          message: '메뉴 저장에 실패했습니다.',
+          message: error.response?.data?.message || '메뉴 저장에 실패했습니다.',
           duration: 2000,
           color: 'danger'
         })
@@ -474,6 +486,7 @@ export default {
     // 이미지 업로드 이벤트 핸들러
     const onMenuImageSelected = (file) => {
       console.log('메뉴 이미지 선택됨:', file)
+      selectedMenuImage.value = file
     }
 
     const onMenuImageUploadSuccess = (response) => {
@@ -488,6 +501,7 @@ export default {
 
     const onMenuImageRemoved = () => {
       console.log('메뉴 이미지 제거됨')
+      selectedMenuImage.value = null
     }
 
     // 라이프사이클
@@ -512,7 +526,9 @@ export default {
       // 이미지 업로드 이벤트 핸들러
       onMenuImageSelected, onMenuImageUploadSuccess, onMenuImageUploadError, onMenuImageRemoved,
       // 계산된 속성
-      storeId
+      storeId,
+      // 이미지 상태
+      selectedMenuImage
     }
   }
 }

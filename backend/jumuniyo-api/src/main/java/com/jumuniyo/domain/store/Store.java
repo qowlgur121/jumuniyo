@@ -183,4 +183,26 @@ public class Store {
     public boolean isOwnedBy(Long ownerId) {
         return this.owner.getId().equals(ownerId);
     }
+
+    /**
+     * 최소 배달 시간 계산 (활성화된 배달지역 중 가장 빠른 배달시간)
+     */
+    public Integer getMinDeliveryTime() {
+        return deliveryAreas.stream()
+                .filter(DeliveryArea::getIsActive)
+                .mapToInt(DeliveryArea::getDeliveryTimeMinutes)
+                .min()
+                .orElse(30); // 기본값 30분
+    }
+
+    /**
+     * 평균 배달 시간 계산 (활성화된 배달지역의 평균 배달시간)
+     */
+    public Double getAverageDeliveryTime() {
+        return deliveryAreas.stream()
+                .filter(DeliveryArea::getIsActive)
+                .mapToInt(DeliveryArea::getDeliveryTimeMinutes)
+                .average()
+                .orElse(30.0); // 기본값 30분
+    }
 } 

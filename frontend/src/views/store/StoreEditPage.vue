@@ -325,17 +325,20 @@
           <div class="form-section">
             <h2 class="section-title">추가 정보</h2>
             
-            <!-- 로고 이미지 URL -->
-            <ion-item class="form-item">
-              <ion-input
-                v-model="formData.logoImageUrl"
-                placeholder="https://example.com/logo.jpg"
-                type="url"
-              >
-                <div slot="label">로고 이미지 URL</div>
-              </ion-input>
-            </ion-item>
-            <div class="form-note">로고 이미지는 나중에 추가할 수 있습니다.</div>
+            <!-- 로고 이미지 업로드 -->
+            <div class="image-upload-section">
+              <h3 class="field-label">가게 로고</h3>
+              <ImageUploader
+                image-type="logo"
+                :store-id="parseInt(storeId)"
+                :existing-image-url="formData.logoImageUrl"
+                @image-selected="onLogoImageSelected"
+                @upload-success="onLogoImageUploadSuccess"
+                @upload-error="onLogoImageUploadError"
+                @image-removed="onLogoImageRemoved"
+              />
+              <div class="form-note">로고 이미지를 변경하려면 새 이미지를 선택하세요.</div>
+            </div>
           </div>
 
           <!-- 제출 버튼 -->
@@ -366,6 +369,7 @@
 <script setup>
 import { ref, reactive, computed, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
+import ImageUploader from '@/components/ImageUploader.vue';
 import {
   IonPage, IonHeader, IonToolbar, IonTitle, IonContent, IonButtons, IonBackButton,
   IonItem, IonInput, IonTextarea, IonSelect, IonSelectOption, IonButton,
@@ -658,6 +662,29 @@ const addDeliveryArea = () => {
 // 배달지역 제거
 const removeDeliveryArea = (index) => {
   formData.deliveryAreas.splice(index, 1);
+};
+
+// 이미지 업로드 관련 이벤트 핸들러
+const onLogoImageSelected = (file) => {
+  console.log('로고 이미지 선택됨:', file);
+  // 이미지가 선택되었을 때 자동으로 업로드될 예정
+};
+
+const onLogoImageUploadSuccess = (imageUrl) => {
+  console.log('로고 이미지 업로드 성공:', imageUrl);
+  formData.logoImageUrl = imageUrl;
+  showToast('로고 이미지가 성공적으로 업로드되었습니다!', 'success');
+};
+
+const onLogoImageUploadError = (error) => {
+  console.error('로고 이미지 업로드 실패:', error);
+  showToast('로고 이미지 업로드에 실패했습니다. 다시 시도해주세요.', 'danger');
+};
+
+const onLogoImageRemoved = () => {
+  console.log('로고 이미지 제거됨');
+  formData.logoImageUrl = '';
+  showToast('로고 이미지가 제거되었습니다.', 'warning');
 };
 
 // 폼 제출
@@ -963,6 +990,19 @@ const submitForm = async () => {
 .loading-container p {
   color: var(--ion-color-medium);
   font-size: 1rem;
+}
+
+/* 이미지 업로드 섹션 스타일 */
+.image-upload-section {
+  padding: 20px 0;
+}
+
+.field-label {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--ion-color-dark);
+  margin-bottom: 12px;
+  text-align: center;
 }
 
 /* 반응형 디자인 */
