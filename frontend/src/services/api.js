@@ -187,4 +187,64 @@ export const fileUploadApi = {
     apiClient.delete(`/stores/${storeId}/menus/${menuId}/image`)
 }
 
+// 주문 관리 API 함수들
+export const orderApi = {
+  // 고객용 주문 내역 조회 (페이징 지원)
+  getMyOrders: (page = 0, size = 10, sort = 'createdAt,desc') =>
+    apiClient.get(`/orders/my?page=${page}&size=${size}&sort=${sort}`),
+  
+  // 특정 주문 상세 조회 (ID로)
+  getOrderById: (orderId) =>
+    apiClient.get(`/orders/${orderId}`),
+  
+  // 특정 주문 상세 조회 (주문번호로)
+  getOrderByNumber: (orderNumber) =>
+    apiClient.get(`/orders/number/${orderNumber}`),
+  
+  // 새로운 주문 생성
+  createOrder: (orderData) =>
+    apiClient.post(`/orders`, orderData),
+  
+  // 주문 취소 (고객용)
+  cancelOrder: (orderId, cancelReason) =>
+    apiClient.patch(`/orders/${orderId}/cancel?cancelReason=${encodeURIComponent(cancelReason)}`),
+  
+  // 매장의 주문 목록 조회 (사업자용)
+  getStoreOrders: (storeId, status = null, page = 0, size = 10, sort = 'createdAt,desc') => {
+    let url = `/orders/store/${storeId}?page=${page}&size=${size}&sort=${sort}`;
+    if (status) {
+      url += `&status=${status}`;
+    }
+    return apiClient.get(url);
+  },
+  
+  // 주문 상태 업데이트 (사업자용)
+  updateOrderStatus: (storeId, orderId, statusData) =>
+    apiClient.patch(`/orders/store/${storeId}/${orderId}/status`, statusData),
+  
+  // 주문 접수 (사업자용)
+  acceptOrder: (orderId) =>
+    apiClient.patch(`/orders/${orderId}/accept`),
+  
+  // 조리 시작 (사업자용)
+  startCooking: (orderId) =>
+    apiClient.patch(`/orders/${orderId}/start-cooking`),
+  
+  // 배달 시작 (사업자용)
+  startDelivery: (orderId) =>
+    apiClient.patch(`/orders/${orderId}/start-delivery`),
+  
+  // 배달 완료 처리 (사업자용)
+  markAsDelivered: (orderId) =>
+    apiClient.patch(`/orders/${orderId}/delivered`),
+  
+  // 주문 권한 확인 (고객용)
+  checkCustomerPermission: (orderId) =>
+    apiClient.get(`/orders/${orderId}/permission/customer`),
+  
+  // 주문 권한 확인 (사업자용)
+  checkStorePermission: (orderId) =>
+    apiClient.get(`/orders/${orderId}/permission/store`)
+};
+
 export default apiClient; // 우리가 설정한 Axios 인스턴스를 다른 파일에서 가져다 쓸 수 있게 내보내는 것임.
