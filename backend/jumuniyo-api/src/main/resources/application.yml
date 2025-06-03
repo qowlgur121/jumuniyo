@@ -86,6 +86,24 @@ jwt:
   secret-key: jumuniyoSecretKeyForJWTTokenGenerationThatMustBeLongEnoughForHS256AlgorithmSecurity
   token-validity-in-seconds: 86400 # 24시간 (24 * 60 * 60)
 
+# --- Swagger/OpenAPI 3.0 설정 ---
+springdoc:
+  api-docs:
+    enabled: true
+    path: /v3/api-docs
+  swagger-ui:
+    enabled: true
+    path: /swagger-ui.html
+    operations-sorter: method
+    tags-sorter: alpha
+    display-request-duration: true
+    disable-swagger-default-url: true
+    doc-expansion: none
+  show-actuator: false
+  # 개발 환경에서만 활성화 (프로덕션에서는 비활성화 권장)
+  api-docs-enabled: true
+  swagger-ui-enabled: true
+
 # --- 파일 업로드 설정 ---
 file:
   upload:
@@ -129,3 +147,18 @@ logging:
 # spring:
 #   profiles:
 #     active: dev
+
+# --- Spring Boot Actuator 설정 ---
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: when_authorized
+      show-components: always
+  health:
+    defaults:
+      enabled: true
