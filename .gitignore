@@ -18,6 +18,9 @@ out/
 !.vscode/extensions.json
 .history
 
+# IDE - Cursor
+.cursor/
+
 # Logs (Claude Task Master가 추가한 내용 포함 및 정리)
 logs/ # 디렉토리로 명시
 *.log
@@ -75,7 +78,6 @@ ehthumbs.db
 # *.sw? -> Vim swap 파일, 필요하다면 유지
 
 # 태스크마스터 관련 생성 파일 
-.cursor/
 .roo/
 scripts/
 tasks/
@@ -83,6 +85,19 @@ tasks/
 .taskmasterconfig
 .windsurfrules
 tasks.json # Claude Task Master가 추가한 내용
+
+# Task Master AI 관련 파일들
+/tasks/
+.taskmasterconfig
+scripts/task-complexity-report.json
+scripts/prd.txt
+.windsurfrules
+tasks.json
+final_review_gate.py
+
+# SpecStory 관련 파일들
+.specstory/
+.trae
 
 # 각 하위 프로젝트의 .gitignore 파일도 존중됨
 # backend/.gitignore
@@ -107,3 +122,5 @@ dev-debug.log
 tasks.json
 
 DEVELOPMENT_GUIDE.md
+IMPLEMENTATION_SUMMARY.md
+URL_GUIDE.md
