@@ -18,9 +18,6 @@ out/
 !.vscode/extensions.json
 .history
 
-# IDE - Cursor
-.cursor/
-
 # Logs (Claude Task Master가 추가한 내용 포함 및 정리)
 logs/ # 디렉토리로 명시
 *.log
@@ -51,9 +48,11 @@ tmp/
 
 # Environment variables (Claude Task Master가 추가한 내용)
 .env
-.env.*
-!.env.example
-!.env.sample
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+# .env.example은 추적함 (예시 파일이므로)
 
 # Operating System Files
 Thumbs.db
@@ -78,6 +77,7 @@ ehthumbs.db
 # *.sw? -> Vim swap 파일, 필요하다면 유지
 
 # 태스크마스터 관련 생성 파일 
+.cursor/
 .roo/
 scripts/
 tasks/
@@ -85,19 +85,6 @@ tasks/
 .taskmasterconfig
 .windsurfrules
 tasks.json # Claude Task Master가 추가한 내용
-
-# Task Master AI 관련 파일들
-/tasks/
-.taskmasterconfig
-scripts/task-complexity-report.json
-scripts/prd.txt
-.windsurfrules
-tasks.json
-final_review_gate.py
-
-# SpecStory 관련 파일들
-.specstory/
-.trae
 
 # 각 하위 프로젝트의 .gitignore 파일도 존중됨
 # backend/.gitignore
@@ -122,5 +109,24 @@ dev-debug.log
 tasks.json
 
 DEVELOPMENT_GUIDE.md
+# SpecStory explanation file
+.specstory/.what-is-this.md
+# SpecStory project identity file
+.specstory/.project.json
+# SpecStory derived-cursor-rules.mdc backup files
+.specstory/ai_rules_backups/*
+
+final_review_gate.py
 IMPLEMENTATION_SUMMARY.md
 URL_GUIDE.md
+
+# Task Master AI 관련 파일들 (깃에서 제외)
+.taskmasterconfig
+tasks/
+scripts/task-complexity-report.json
+
+# 기타 AI 도구 설정 (민감한 정보 포함)
+.trae/
+.specstory/
+.cursorignore
+.cursorindexingignore
