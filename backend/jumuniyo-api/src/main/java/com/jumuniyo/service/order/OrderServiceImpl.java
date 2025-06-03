@@ -6,6 +6,8 @@ import com.jumuniyo.domain.order.*;
 import com.jumuniyo.domain.store.Store;
 import com.jumuniyo.domain.user.User;
 import com.jumuniyo.dto.order.OrderCreateRequestDto;
+import com.jumuniyo.dto.order.OrderItemCreateRequestDto;
+import com.jumuniyo.dto.order.OrderItemOptionCreateRequestDto;
 import com.jumuniyo.dto.order.OrderResponseDto;
 import com.jumuniyo.dto.order.OrderStatusUpdateRequestDto;
 import com.jumuniyo.repository.order.OrderRepository;
@@ -71,7 +73,7 @@ public class OrderServiceImpl implements OrderService {
                 .build();
 
         // 주문 항목 생성
-        for (OrderCreateRequestDto.OrderItemDto itemDto : requestDto.getOrderItems()) {
+        for (OrderItemCreateRequestDto itemDto : requestDto.getOrderItems()) {
             Menu menu = menuRepository.findById(itemDto.getMenuId())
                     .orElseThrow(() -> new IllegalArgumentException("메뉴를 찾을 수 없습니다: " + itemDto.getMenuId()));
 
@@ -84,15 +86,15 @@ public class OrderServiceImpl implements OrderService {
 
             // 옵션 처리
             if (itemDto.getOptions() != null) {
-                for (OrderCreateRequestDto.OrderItemDto.OrderItemOptionDto optionDto : itemDto.getOptions()) {
+                for (OrderItemOptionCreateRequestDto optionDto : itemDto.getOptions()) {
                     MenuOption menuOption = menuOptionRepository.findById(optionDto.getMenuOptionId())
                             .orElseThrow(() -> new IllegalArgumentException("메뉴 옵션을 찾을 수 없습니다: " + optionDto.getMenuOptionId()));
 
                     OrderItemOption orderItemOption = OrderItemOption.builder()
                             .orderItem(orderItem)
-                            .optionGroupName(menuOption.getOptionGroup().getName())
-                            .optionName(menuOption.getName())
-                            .optionPrice(menuOption.getAdditionalPrice())
+                            .menuOption(menuOption)
+                            .optionValue(optionDto.getOptionValue())
+                            .additionalPrice(menuOption.getAdditionalPrice())
                             .build();
 
                     orderItem.addOrderItemOption(orderItemOption);

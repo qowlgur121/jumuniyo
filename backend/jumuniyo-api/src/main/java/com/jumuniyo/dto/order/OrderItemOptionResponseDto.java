@@ -1,38 +1,64 @@
 package com.jumuniyo.dto.order;
 
 import com.jumuniyo.domain.order.OrderItemOption;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
+import io.swagger.v3.oas.annotations.media.Schema;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import java.math.BigDecimal;
 
-@Data
-@Builder
+/**
+ * 주문 항목 옵션 응답 DTO
+ */
+@Getter
+@Setter
 @NoArgsConstructor
-@AllArgsConstructor
+@Schema(description = "주문 항목 옵션 응답 정보")
 public class OrderItemOptionResponseDto {
-    private Long id;
-    private String optionGroupName;
-    private String optionName;
-    private BigDecimal optionPrice;
-    private String displayText; // 예: "맵기 선택: 매운맛 (+0원)"
 
-    public static OrderItemOptionResponseDto fromEntity(OrderItemOption option) {
-        String text = option.getOptionGroupName() + ": " + option.getOptionName();
-        if (option.getOptionPrice() != null && option.getOptionPrice().compareTo(BigDecimal.ZERO) > 0) {
-            text += " (+" + option.getOptionPrice().toPlainString() + "원)";
-        } else {
-            text += " (+0원)"; // 가격이 0이거나 null이면 (+0원)으로 표시 (선택사항)
+    @Schema(description = "주문 항목 옵션 ID", example = "1")
+    private Long id;
+
+    @Schema(description = "메뉴 옵션 ID", example = "1")
+    private Long menuOptionId;
+
+    @Schema(description = "옵션 그룹명", example = "사이즈")
+    private String optionGroupName;
+
+    @Schema(description = "옵션명", example = "라지")
+    private String optionName;
+
+    @Schema(description = "선택된 옵션 값", example = "라지 사이즈")
+    private String optionValue;
+
+    @Schema(description = "추가 가격", example = "1000")
+    private BigDecimal additionalPrice;
+
+    /**
+     * OrderItemOption 엔티티를 OrderItemOptionResponseDto로 변환
+     */
+    public static OrderItemOptionResponseDto from(OrderItemOption orderItemOption) {
+        if (orderItemOption == null) {
+            return null;
         }
 
-        return OrderItemOptionResponseDto.builder()
-                .id(option.getId())
-                .optionGroupName(option.getOptionGroupName())
-                .optionName(option.getOptionName())
-                .optionPrice(option.getOptionPrice())
-                .displayText(text) // 생성된 텍스트 할당
-                .build();
+        OrderItemOptionResponseDto dto = new OrderItemOptionResponseDto();
+        dto.setId(orderItemOption.getId());
+        dto.setOptionValue(orderItemOption.getOptionValue());
+        dto.setAdditionalPrice(orderItemOption.getAdditionalPrice());
+
+        // 메뉴 옵션 정보
+        if (orderItemOption.getMenuOption() != null) {
+            dto.setMenuOptionId(orderItemOption.getMenuOption().getId());
+            dto.setOptionName(orderItemOption.getMenuOption().getName());
+            
+            // 옵션 그룹 정보
+            if (orderItemOption.getMenuOption().getOptionGroup() != null) {
+                dto.setOptionGroupName(orderItemOption.getMenuOption().getOptionGroup().getName());
+            }
+        }
+
+        return dto;
     }
 } 

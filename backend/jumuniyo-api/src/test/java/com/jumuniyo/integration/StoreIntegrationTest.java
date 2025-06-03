@@ -71,35 +71,34 @@ public class StoreIntegrationTest {
                 .apply(springSecurity())
                 .build();
 
-        // 테스트용 카테고리 생성
-        testCategory = Category.builder()
-                .name("한식")
-                .description("한국 음식")
-                .displayOrder(1)
-                .build();
-        categoryRepository.save(testCategory);
+        // 테스트용 카테고리 조회 또는 생성
+        testCategory = categoryRepository.findByName("한식")
+                .orElseGet(() -> categoryRepository.save(Category.builder()
+                        .name("한식")
+                        .description("한국 음식")
+                        .displayOrder(1)
+                        .build()));
 
-        // 테스트용 사장님 사용자 생성
-        testOwner = User.builder()
-                .email("owner@test.com")
-                .password(passwordEncoder.encode("password"))
-                .nickname("테스트 사장님")
-                .phoneNumber("010-1234-5678")
-                .role(UserRole.ROLE_OWNER)
-                .status(UserStatus.ACTIVE)
-                .build();
-        userRepository.save(testOwner);
+        // 테스트용 사장님 사용자 조회 또는 생성
+        testOwner = userRepository.findByEmailAndRole("owner@test.com", UserRole.ROLE_OWNER)
+                .orElseGet(() -> userRepository.save(User.builder()
+                        .email("owner@test.com")
+                        .password("password") // 실제로는 암호화 필요
+                        .nickname("사장님")
+                        .role(UserRole.ROLE_OWNER)
+                        .status(UserStatus.ACTIVE)
+                        .build()));
 
-        // 테스트용 관리자 생성
-        testAdmin = User.builder()
-                .email("admin@test.com")
-                .password(passwordEncoder.encode("password"))
-                .nickname("테스트 관리자")
-                .phoneNumber("010-9999-9999")
-                .role(UserRole.ROLE_ADMIN)
-                .status(UserStatus.ACTIVE)
-                .build();
-        userRepository.save(testAdmin);
+        // 테스트용 관리자 조회 또는 생성
+        testAdmin = userRepository.findByEmailAndRole("admin@test.com", UserRole.ROLE_ADMIN)
+                .orElseGet(() -> userRepository.save(User.builder()
+                        .email("admin@test.com")
+                        .password(passwordEncoder.encode("password"))
+                        .nickname("테스트 관리자")
+                        .phoneNumber("010-9999-9999")
+                        .role(UserRole.ROLE_ADMIN)
+                        .status(UserStatus.ACTIVE)
+                        .build()));
     }
 
     @Test

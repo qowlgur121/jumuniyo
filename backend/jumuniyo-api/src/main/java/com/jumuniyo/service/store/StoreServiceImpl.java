@@ -4,6 +4,7 @@ import com.jumuniyo.config.CacheConfig;
 import com.jumuniyo.domain.store.Category;
 import com.jumuniyo.domain.store.Store;
 import com.jumuniyo.domain.user.User;
+import com.jumuniyo.dto.store.PublicStoreResponseDto;
 import com.jumuniyo.dto.store.StoreCreateRequestDto;
 import com.jumuniyo.dto.store.StoreResponseDto;
 import com.jumuniyo.dto.store.StoreUpdateRequestDto;
@@ -946,5 +947,53 @@ public class StoreServiceImpl implements StoreService {
         }
         
         return searchRadius;
+    }
+
+    @Override
+    @Transactional  
+    public StoreResponseDto updateStoreLogo(Long storeId, String imageUrl, String ownerEmail) {
+        User owner = userRepository.findByEmail(ownerEmail)
+                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다: " + ownerEmail));
+        
+        return updateStoreLogo(storeId, imageUrl, owner.getId());
+    }
+
+    @Override
+    @Transactional
+    public void deleteStoreLogo(Long storeId, String ownerEmail) {
+        User owner = userRepository.findByEmail(ownerEmail)
+                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다: " + ownerEmail));
+        
+        deleteStoreLogo(storeId, owner.getId());
+    }
+
+    @Override
+    public Page<PublicStoreResponseDto> findAllApprovedStores(Pageable pageable) {
+        // 임시 구현 - 빌드 실패 방지용
+        return Page.empty();
+    }
+
+    @Override
+    public PublicStoreResponseDto findApprovedStoreById(Long storeId) {
+        // 임시 구현 - 빌드 실패 방지용
+        return null;
+    }
+
+    @Override
+    public Page<PublicStoreResponseDto> findApprovedStoresByCategory(String categoryName, Pageable pageable) {
+        // 임시 구현 - 빌드 실패 방지용
+        return Page.empty();
+    }
+
+    @Override
+    public Page<PublicStoreResponseDto> searchApprovedStoresByName(String storeName, Pageable pageable) {
+        // 임시 구현 - 빌드 실패 방지용
+        return Page.empty();
+    }
+
+    @Override
+    public Page<PublicStoreResponseDto> findApprovedStoresByLocation(BigDecimal latitude, BigDecimal longitude, Double radiusKm, Pageable pageable) {
+        // 임시 구현 - 빌드 실패 방지용
+        return Page.empty();
     }
 } 

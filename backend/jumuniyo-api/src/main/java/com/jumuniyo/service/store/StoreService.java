@@ -3,6 +3,7 @@ package com.jumuniyo.service.store;
 import com.jumuniyo.domain.store.Category;
 import com.jumuniyo.domain.store.Store;
 import com.jumuniyo.domain.user.User;
+import com.jumuniyo.dto.store.PublicStoreResponseDto;
 import com.jumuniyo.dto.store.StoreCreateRequestDto;
 import com.jumuniyo.dto.store.StoreResponseDto;
 import com.jumuniyo.dto.store.StoreUpdateRequestDto;
@@ -165,9 +166,19 @@ public interface StoreService {
     StoreResponseDto updateStoreLogo(Long storeId, String imageUrl, Long ownerId);
 
     /**
+     * 가게 로고 이미지 업데이트 (이메일 기반)
+     */
+    StoreResponseDto updateStoreLogo(Long storeId, String imageUrl, String ownerEmail);
+
+    /**
      * 가게 로고 이미지 삭제
      */
     void deleteStoreLogo(Long storeId, Long ownerId);
+
+    /**
+     * 가게 로고 이미지 삭제 (이메일 기반)
+     */
+    void deleteStoreLogo(Long storeId, String ownerEmail);
 
     /**
      * 최적화된 위치 기반 검색 - 공간 인덱스 활용
@@ -210,4 +221,29 @@ public interface StoreService {
             Boolean freeDeliveryOnly,
             String sortBy,
             Pageable pageable);
+
+    /**
+     * 승인된 매장 전체 조회 (공개용)
+     */
+    Page<PublicStoreResponseDto> findAllApprovedStores(Pageable pageable);
+
+    /**
+     * 승인된 매장 상세 조회 (공개용)
+     */
+    PublicStoreResponseDto findApprovedStoreById(Long storeId);
+
+    /**
+     * 카테고리별 승인된 매장 조회 (공개용)
+     */
+    Page<PublicStoreResponseDto> findApprovedStoresByCategory(String categoryName, Pageable pageable);
+
+    /**
+     * 이름으로 승인된 매장 검색 (공개용)
+     */
+    Page<PublicStoreResponseDto> searchApprovedStoresByName(String storeName, Pageable pageable);
+
+    /**
+     * 위치 기반 승인된 매장 검색 (공개용)
+     */
+    Page<PublicStoreResponseDto> findApprovedStoresByLocation(BigDecimal latitude, BigDecimal longitude, Double radiusKm, Pageable pageable);
 } 
