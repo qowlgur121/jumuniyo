@@ -1,0 +1,132 @@
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# IDE - IntelliJ
+.idea/
+*.iml
+*.ipr
+*.iws
+out/
+# target/ # Maven
+# build/ # Gradle build output - handled by backend/.gitignore or explicitly below
+
+# IDE - VS Code
+.vscode/*
+!.vscode/settings.json # 팀 설정을 공유할 경우 주석 해제 또는 ! 사용
+!.vscode/extensions.json
+.history
+
+# Logs (Claude Task Master가 추가한 내용 포함 및 정리)
+logs/ # 디렉토리로 명시
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+dev-debug.log* # dev-debug.log도 *를 붙여 패턴으로
+
+# Node.js related (Claude Task Master가 추가한 내용과 중복 정리)
+node_modules/
+dist/ # Common for frontend builds
+dist-ssr/ # Common for frontend builds
+*.local
+
+# Gradle Cache
+.gradle/
+
+# Gradle build directory (백엔드)
+backend/build/
+
+# Frontend build directory & node_modules
+frontend/dist/
+frontend/node_modules/
+
+# Temporary files
+temp/
+tmp/
+
+# Environment variables (Claude Task Master가 추가한 내용)
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+# .env.example은 추적함 (예시 파일이므로)
+
+# Operating System Files
+Thumbs.db
+ehthumbs.db
+
+# yarn berry (if used)
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/sdks
+!.yarn/versions
+.pnp.*
+
+# Claude Task Master 추가 항목 중 필요한 것 (예시, 위에서 이미 처리된 것 제외)
+# .idea -> 이미 위에서 처리됨
+# .vscode -> 이미 위에서 처리됨
+# *.suo -> Windows/Visual Studio 관련, 필요하다면 유지
+# *.ntvs* -> Windows/Visual Studio 관련, 필요하다면 유지
+# *.njsproj -> Windows/Visual Studio 관련, 필요하다면 유지
+# *.sln -> Windows/Visual Studio 관련, 필요하다면 유지
+# *.sw? -> Vim swap 파일, 필요하다면 유지
+
+# 태스크마스터 관련 생성 파일 
+.cursor/
+.roo/
+scripts/
+tasks/
+.roomodes
+.taskmasterconfig
+.windsurfrules
+tasks.json # Claude Task Master가 추가한 내용
+
+# 각 하위 프로젝트의 .gitignore 파일도 존중됨
+# backend/.gitignore
+# frontend/.gitignore
+
+# Added by Claude Task Master
+# Logs
+logs
+dev-debug.log
+# Dependency directories
+# Environment variables
+# Editor directories and files
+.idea
+.vscode
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+# OS specific
+# Task files
+tasks.json
+
+DEVELOPMENT_GUIDE.md
+# SpecStory explanation file
+.specstory/.what-is-this.md
+# SpecStory project identity file
+.specstory/.project.json
+# SpecStory derived-cursor-rules.mdc backup files
+.specstory/ai_rules_backups/*
+
+final_review_gate.py
+IMPLEMENTATION_SUMMARY.md
+URL_GUIDE.md
+
+# Task Master AI 관련 파일들 (깃에서 제외)
+.taskmasterconfig
+tasks/
+scripts/task-complexity-report.json
+
+# 기타 AI 도구 설정 (민감한 정보 포함)
+.trae/
+.specstory/
+.cursorignore
+.cursorindexingignore

@@ -1,0 +1,247 @@
+/* ===========================================
+   반응형 디자인 공통 스타일
+   ========================================== */
+
+/* 브레이크포인트 정의 */
+:root {
+  /* 브레이크포인트 */
+  --mobile-max: 767px;
+  --tablet-min: 768px;
+  --tablet-max: 1023px;
+  --desktop-min: 1024px;
+  --large-desktop-min: 1440px;
+  
+  /* 요기요 스타일 색상 */
+  --primary-red: #ff1744;
+  --secondary-red: #e50032;
+  --background-white: #ffffff;
+  --background-light: #f8f9fa;
+  --border-gray: #e9ecef;
+  --text-primary: #333333;
+  --text-secondary: #666666;
+  --text-placeholder: #999999;
+  
+  /* 간격 */
+  --container-padding-mobile: 20px;
+  --container-padding-tablet: 32px;
+  --container-padding-desktop: 40px;
+  
+  /* 최대 너비 */
+  --container-max-width: 400px;
+  --container-max-width-tablet: 480px;
+  --container-max-width-desktop: 520px;
+}
+
+/* 기본 컨테이너 스타일 */
+.responsive-container {
+  width: 100%;
+  max-width: var(--container-max-width);
+  margin: 0 auto;
+  padding: 0 var(--container-padding-mobile);
+}
+
+/* 반응형 텍스트 크기 */
+.responsive-title {
+  font-size: 40px;
+  line-height: 1.2;
+}
+
+.responsive-subtitle {
+  font-size: 16px;
+  line-height: 1.4;
+}
+
+.responsive-body {
+  font-size: 16px;
+  line-height: 1.5;
+}
+
+.responsive-small {
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+/* 반응형 버튼 */
+.responsive-button {
+  height: 52px;
+  font-size: 16px;
+  border-radius: 8px;
+  padding: 0 20px;
+  min-height: 44px; /* 터치 친화적 최소 높이 */
+}
+
+/* 반응형 입력 필드 */
+.responsive-input {
+  height: 52px;
+  font-size: 16px;
+  border-radius: 8px;
+  padding: 16px;
+  min-height: 44px; /* 터치 친화적 최소 높이 */
+}
+
+/* 반응형 간격 */
+.spacing-xs { margin: 8px 0; }
+.spacing-sm { margin: 14px 0; }
+.spacing-md { margin: 20px 0; }
+.spacing-lg { margin: 26px 0; }
+.spacing-xl { margin: 34px 0; }
+
+/* ===========================================
+   태블릿 스타일 (768px ~ 1023px)
+   ========================================== */
+@media (min-width: 768px) and (max-width: 1023px) {
+  .responsive-container {
+    max-width: var(--container-max-width-tablet);
+    padding: 0 var(--container-padding-tablet);
+  }
+  
+  .responsive-title {
+    font-size: 48px;
+  }
+  
+  .responsive-subtitle {
+    font-size: 18px;
+  }
+  
+  .responsive-button {
+    height: 56px;
+    font-size: 17px;
+    padding: 0 24px;
+  }
+  
+  .responsive-input {
+    height: 56px;
+    font-size: 17px;
+    padding: 18px;
+  }
+  
+  .spacing-xs { margin: 8px 0; }
+  .spacing-sm { margin: 14px 0; }
+  .spacing-md { margin: 20px 0; }
+  .spacing-lg { margin: 26px 0; }
+  .spacing-xl { margin: 34px 0; }
+}
+
+/* ===========================================
+   데스크톱 스타일 (1024px+)
+   ========================================== */
+@media (min-width: 1024px) {
+  .responsive-container {
+    max-width: var(--container-max-width-desktop);
+    padding: 0 var(--container-padding-desktop);
+  }
+  
+  .responsive-title {
+    font-size: 52px;
+  }
+  
+  .responsive-subtitle {
+    font-size: 18px;
+  }
+  
+  .responsive-button {
+    height: 56px;
+    font-size: 18px;
+    padding: 0 28px;
+  }
+  
+  .responsive-input {
+    height: 56px;
+    font-size: 18px;
+    padding: 20px;
+  }
+  
+  .spacing-xs { margin: 10px 0; }
+  .spacing-sm { margin: 16px 0; }
+  .spacing-md { margin: 22px 0; }
+  .spacing-lg { margin: 28px 0; }
+  .spacing-xl { margin: 36px 0; }
+  
+  /* 데스크톱에서 호버 효과 */
+  .responsive-button:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(255, 23, 68, 0.3);
+    transition: all 0.2s ease;
+  }
+}
+
+/* ===========================================
+   큰 화면 (1440px+)
+   ========================================== */
+@media (min-width: 1440px) {
+  .responsive-container {
+    max-width: 600px;
+  }
+  
+  .responsive-title {
+    font-size: 56px;
+  }
+}
+
+/* ===========================================
+   유틸리티 클래스
+   ========================================== */
+
+/* 숨김/보임 제어 */
+.mobile-only {
+  display: block;
+}
+
+.tablet-only {
+  display: none;
+}
+
+.desktop-only {
+  display: none;
+}
+
+@media (min-width: 768px) and (max-width: 1023px) {
+  .mobile-only {
+    display: none;
+  }
+  
+  .tablet-only {
+    display: block;
+  }
+}
+
+@media (min-width: 1024px) {
+  .mobile-only {
+    display: none;
+  }
+  
+  .desktop-only {
+    display: block;
+  }
+}
+
+/* 텍스트 정렬 */
+.text-center-mobile {
+  text-align: center;
+}
+
+@media (min-width: 768px) {
+  .text-left-tablet {
+    text-align: left;
+  }
+}
+
+/* 레이아웃 */
+.flex-column-mobile {
+  display: flex;
+  flex-direction: column;
+}
+
+@media (min-width: 768px) {
+  .flex-row-tablet {
+    flex-direction: row;
+  }
+}
+
+/* 안전 영역 (아이폰 노치 등 대응) */
+.safe-area-padding {
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
+} 

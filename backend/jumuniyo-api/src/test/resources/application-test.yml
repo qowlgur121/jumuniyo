@@ -1,0 +1,45 @@
+spring:
+  datasource:
+    url: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    driverClassName: org.h2.Driver
+    username: sa
+    password: 
+  jpa:
+    database-platform: org.hibernate.dialect.H2Dialect
+    hibernate:
+      ddl-auto: create-drop # 테스트 실행 시 스키마를 생성하고 종료 시 삭제
+    show-sql: true # SQL 쿼리 로깅 활성화 (디버깅용)
+  h2:
+    console:
+      enabled: true # H2 콘솔 활성화 (개발 중 확인용)
+      path: /h2-console
+  # 테스트 시 Spring Security 자동 설정 비활성화 (필요에 따라 주석 해제 또는 수정)
+  # security:
+  #   basic:
+  #     enabled: false
+  #   oauth2:
+  #     client:
+  #       registration:
+  #         # 테스트용 OAuth2 클라이언트 설정을 여기에 추가할 수 있습니다.
+  #         # 예: google, naver, kakao 등
+  #         google:
+  #           client-id: test-client-id
+  #           client-secret: test-client-secret
+  #           scope:
+  #             - email
+  #             - profile
+
+logging:
+  level:
+    org.hibernate.SQL: debug # Hibernate SQL 로그 레벨
+    org.hibernate.type.descriptor.sql: trace # SQL 파라미터 값 로깅
+    # com.jumuniyo: debug # 프로젝트 패키지 로그 레벨
+
+server:
+  port: 8082 # 테스트 실행 시 사용할 포트 (기본 포트와 충돌 방지)
+
+# JWT 테스트용 설정 (실제 값으로 대체 필요 시)
+jwt:
+  secret: testJwtSecretKeyWhichIsVeryLongAndSecureForTestingEnvironmentChangeThisKeyInProduction
+  accessExpirationMinutes: 5 # 테스트용 짧은 만료 시간
+  refreshExpirationDays: 1 # 테스트용 짧은 만료 시간 

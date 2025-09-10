@@ -1,7 +1,8 @@
 plugins {
     id 'java'
-    id 'org.springframework.boot' version '3.4.5'
+    id 'org.springframework.boot' version '3.2.6'
     id 'io.spring.dependency-management' version '1.1.7'
+    id 'io.freefair.lombok' version '8.6'
 }
 
 group = 'com.jumuniyo'
@@ -28,13 +29,48 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-security'
     implementation 'org.springframework.boot:spring-boot-starter-validation'
     implementation 'org.springframework.boot:spring-boot-starter-web'
-    compileOnly 'org.projectlombok:lombok'
+    
+    // Spring Boot Actuator 추가 (Health check, Metrics 등)
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
+    
+    // OAuth2 클라이언트 의존성 추가
+    implementation 'org.springframework.boot:spring-boot-starter-oauth2-client'
+    
+    // JWT 관련 의존성
+    implementation 'io.jsonwebtoken:jjwt-api:0.12.3'
+    implementation 'io.jsonwebtoken:jjwt-impl:0.12.3'
+    implementation 'io.jsonwebtoken:jjwt-jackson:0.12.3'
+    
+    // Swagger/OpenAPI 3.0 (Spring Boot 3.x 호환 최신 버전)
+    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.6.0'
+    
+    // Lombok 의존성 강화
+    compileOnly 'org.projectlombok:lombok:1.18.30'
+    annotationProcessor 'org.projectlombok:lombok:1.18.30'
+    testCompileOnly 'org.projectlombok:lombok:1.18.30'
+    testAnnotationProcessor 'org.projectlombok:lombok:1.18.30'
+    
     developmentOnly 'org.springframework.boot:spring-boot-devtools'
     runtimeOnly 'com.mysql:mysql-connector-j'
-    annotationProcessor 'org.projectlombok:lombok'
+    runtimeOnly 'com.h2database:h2' // 인메모리 DB (개발용)
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation 'org.springframework.security:spring-security-test'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+// Lombok annotation processor 강제 활성화
+compileJava {
+    options.compilerArgs += [
+        '-parameters',
+        '-Xlint:deprecation',
+        '-Xlint:unchecked'
+    ]
+    options.annotationProcessorPath = configurations.annotationProcessor
+}
+
+compileTestJava {
+    options.compilerArgs += ['-parameters']
+    options.annotationProcessorPath = configurations.testAnnotationProcessor
 }
 
 tasks.named('test') {
